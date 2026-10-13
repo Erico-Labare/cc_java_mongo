@@ -8,7 +8,7 @@ spring:
       auto-index-creation: true
 
 server:
-  port: 8080
+  port: 8081
 
 logging:
   level:
@@ -29,3 +29,16 @@ info:
   app:
     name: Medical API
     description: API REST de gestion médicale
+
+
+app:
+  jwt:
+    # Clé de développement : à remplacer par une clé secrète propre avant toute utilisation réelle.
+    secret: ${JWT_SECRET:}
+    expiration-ms: 3600000
+  security:
+    bootstrap-user:
+      enabled: ${BOOTSTRAP_USER_ENABLED:false}
+      username: ${APP_ADMIN_USERNAME:admin}
+      password: ${APP_ADMIN_PASSWORD:}
+
