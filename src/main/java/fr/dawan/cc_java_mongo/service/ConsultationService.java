@@ -1,4 +1,3 @@
-
 package fr.dawan.cc_java_mongo.service;
 
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
@@ -17,6 +16,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 /**
  * Gère les opérations métier relatives aux consultations.
  */
@@ -27,6 +30,7 @@ public class ConsultationService {
     private final PatientRepository patientRepository;
     private final MedecinRepository medecinRepository;
     private final MedicamentRepository medicamentRepository;
+    private final Clock clock;
 
     public ConsultationService(
             ConsultationRepository consultationRepository,
@@ -37,6 +41,7 @@ public class ConsultationService {
         this.patientRepository = patientRepository;
         this.medecinRepository = medecinRepository;
         this.medicamentRepository = medicamentRepository;
+        this.clock = Clock.systemDefaultZone();
     }
 
     /**
@@ -138,12 +143,13 @@ public class ConsultationService {
         return consultationRepository.save(consultation);
     }
 
+
     /**
      * Vérifie les données et les références d'une consultation.
      */
     private void validateConsultation(Consultation consultation) {
         if (consultation.getDate() == null
-                || !consultation.getDate().isAfter(LocalDateTime.now())) {
+                || !consultation.getDate().isAfter(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
                     "La date de consultation doit être dans le futur.");
         }
@@ -164,6 +170,7 @@ public class ConsultationService {
 
         validatePrescriptions(consultation.getPrescriptions());
     }
+
 
     /**
      * Vérifie que les médicaments existent et que le nombre de prises est valide.
@@ -194,9 +201,10 @@ public class ConsultationService {
      */
     private void ensureFutureConsultation(Consultation consultation) {
         if (consultation.getDate() == null
-                || !consultation.getDate().isAfter(LocalDateTime.now())) {
+                || !consultation.getDate().isAfter(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
                     "Seules les consultations futures peuvent être modifiées ou supprimées.");
         }
     }
+
 }
