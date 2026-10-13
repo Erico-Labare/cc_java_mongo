@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
 
 /** Centralise le traitement des exceptions de l'API REST. */
 @RestControllerAdvice

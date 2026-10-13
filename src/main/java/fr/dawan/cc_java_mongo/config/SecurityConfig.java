@@ -15,7 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/** Configure l'authentification et la protection de l'API REST. */
+/**
+ * Configure l'authentification et la protection de l'API REST.
+ */
 @Configuration
 public class SecurityConfig {
 
@@ -43,11 +45,14 @@ public class SecurityConfig {
             AuthenticationProvider authenticationProvider) throws Exception {
 
         http
-                .cors(cors -> {})
-                // CSRF est désactivé car l'API est stateless et
-                // authentifie les requêtes via un JWT Bearer transmis
-                // explicitement dans l'en-tête Authorization,
-                // et non via un cookie envoyé automatiquement.
+                .cors(cors -> {
+                })
+                // CSRF est désactivé car cette API est stateless :
+                // l'authentification repose exclusivement sur un JWT transmis
+                // explicitement dans l'en-tête Authorization : Bearer.
+                // Aucun cookie ni session HTTP n'est utilisé pour authentifier
+                // les requêtes. Cette configuration doit être réévaluée si
+                // l'authentification par cookie est introduite.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

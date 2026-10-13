@@ -18,6 +18,7 @@ public class MedicamentRequest {
     private String libelle;
 
     public MedicamentRequest() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getCode() {

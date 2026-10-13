@@ -55,9 +55,12 @@ public class DocumentController {
         GridFsResource resource =
                 documentService.downloadDocument(numero);
 
-        String filename = resource.getFilename() == null
-                ? "document"
-                : resource.getFilename();
+
+        String filename = resource.getFilename();
+
+        if (filename == null || filename.isBlank()) {
+            filename = "document";
+        }
 
         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
 
@@ -68,11 +71,6 @@ public class DocumentController {
             } catch (IllegalArgumentException ignored) {
                 // On conserve le type générique si le type est invalide.
             }
-        }
-
-
-        if (filename == null || filename.isBlank()) {
-            filename = "document";
         }
 
         return ResponseEntity.ok()

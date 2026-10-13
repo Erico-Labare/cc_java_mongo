@@ -17,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * Gère les opérations métier relatives aux consultations.

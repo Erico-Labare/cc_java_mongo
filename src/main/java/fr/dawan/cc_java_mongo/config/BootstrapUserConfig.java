@@ -3,6 +3,8 @@ package fr.dawan.cc_java_mongo.config;
 
 import fr.dawan.cc_java_mongo.model.Utilisateur;
 import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 /** Crée facultativement un compte de démonstration pour le développement. */
 @Configuration
 public class BootstrapUserConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(BootstrapUserConfig.class);
 
     @Bean
     @ConditionalOnProperty(
@@ -33,8 +37,7 @@ public class BootstrapUserConfig {
                         "USER");
 
                 utilisateurRepository.save(utilisateur);
-                System.out.println(
-                        "Compte de démonstration créé pour : " + username);
+                logger.info("Compte de démonstration créé pour : {}", username);
             }
         };
     }

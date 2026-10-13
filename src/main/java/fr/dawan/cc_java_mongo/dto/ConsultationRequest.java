@@ -34,6 +34,7 @@ public class ConsultationRequest {
     private List<PrescriptionRequest> prescriptions = new ArrayList<>();
 
     public ConsultationRequest() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getNumero() {

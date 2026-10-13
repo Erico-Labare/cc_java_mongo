@@ -16,6 +16,7 @@ public class PrescriptionRequest {
     private int nbPrises;
 
     public PrescriptionRequest() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getMedicamentId() {

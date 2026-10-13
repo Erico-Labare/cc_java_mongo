@@ -12,7 +12,7 @@ public class PatientRequest {
 
     @NotBlank(message = "Le numéro de Sécurité sociale est obligatoire.")
     @Pattern(
-            regexp = "^[0-9]{15}$",
+            regexp = "^\\d{15}$",
             message = "Le numéro de Sécurité sociale doit contenir 15 chiffres."
     )
     private String numeroSecuriteSociale;
@@ -22,6 +22,7 @@ public class PatientRequest {
     private String nom;
 
     public PatientRequest() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getNumeroSecuriteSociale() {

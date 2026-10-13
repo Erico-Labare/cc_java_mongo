@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 
 /** Génère et vérifie les jetons JWT de l'application. */
@@ -35,12 +36,12 @@ public class JwtService {
 
     /** Génère un jeton JWT pour l'utilisateur indiqué. */
     public String generateToken(UserDetails userDetails) {
-        long now = System.currentTimeMillis();
+        Instant now = Instant.now();
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(now))
-                .expiration(new Date(now + expirationMs))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(expirationMs)))
                 .signWith(signingKey)
                 .compact();
     }
@@ -56,7 +57,7 @@ public class JwtService {
             Claims claims = extractAllClaims(token);
 
             return claims.getSubject().equals(userDetails.getUsername())
-                    && claims.getExpiration().after(new Date());
+                    && claims.getExpiration().toInstant().isAfter(Instant.now());
         } catch (JwtException | IllegalArgumentException exception) {
             return false;
         }

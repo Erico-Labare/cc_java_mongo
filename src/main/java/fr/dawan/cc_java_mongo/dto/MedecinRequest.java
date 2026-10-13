@@ -18,6 +18,7 @@ public class MedecinRequest {
     private String nom;
 
     public MedecinRequest() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getMatricule() {

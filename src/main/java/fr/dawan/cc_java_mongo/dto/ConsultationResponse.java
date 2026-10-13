@@ -18,6 +18,7 @@ public class ConsultationResponse {
     private String documentId;
 
     public ConsultationResponse() {
+        // Default constructor required for JSON deserialization
     }
 
     public String getNumero() {
