@@ -1,0 +1,202 @@
+
+package fr.dawan.cc_java_mongo.service;
+
+import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
+import fr.dawan.cc_java_mongo.model.Consultation;
+import fr.dawan.cc_java_mongo.model.Prescription;
+import fr.dawan.cc_java_mongo.repository.ConsultationRepository;
+import fr.dawan.cc_java_mongo.repository.MedecinRepository;
+import fr.dawan.cc_java_mongo.repository.MedicamentRepository;
+import fr.dawan.cc_java_mongo.repository.PatientRepository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Gère les opérations métier relatives aux consultations.
+ */
+@Service
+public class ConsultationService {
+
+    private final ConsultationRepository consultationRepository;
+    private final PatientRepository patientRepository;
+    private final MedecinRepository medecinRepository;
+    private final MedicamentRepository medicamentRepository;
+
+    public ConsultationService(
+            ConsultationRepository consultationRepository,
+            PatientRepository patientRepository,
+            MedecinRepository medecinRepository,
+            MedicamentRepository medicamentRepository) {
+        this.consultationRepository = consultationRepository;
+        this.patientRepository = patientRepository;
+        this.medecinRepository = medecinRepository;
+        this.medicamentRepository = medicamentRepository;
+    }
+
+    /**
+     * Récupère les consultations avec pagination.
+     */
+    public Page<Consultation> getAllConsultations(Pageable pageable) {
+        return consultationRepository.findAll(pageable);
+    }
+
+    /**
+     * Récupère les consultations d'un patient avec pagination.
+     */
+    public Page<Consultation> getConsultationsByPatient(
+            String patientId, Pageable pageable) {
+
+        if (!patientRepository.existsById(patientId)) {
+            throw new ResourceNotFoundException(
+                    "Patient introuvable : " + patientId);
+        }
+
+        return consultationRepository.findByPatientId(patientId, pageable);
+    }
+
+    /**
+     * Recherche une consultation par son numéro.
+     */
+    public Consultation getConsultationById(String numero) {
+        return consultationRepository.findById(numero)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Consultation introuvable : " + numero));
+    }
+
+    /**
+     * Crée une consultation programmée dans le futur.
+     */
+    public Consultation createConsultation(Consultation consultation) {
+        if (consultation.getNumero() == null
+                || consultation.getNumero().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Le numéro de consultation est obligatoire.");
+        }
+
+        if (consultationRepository.existsById(consultation.getNumero())) {
+            throw new IllegalArgumentException(
+                    "Une consultation existe déjà avec ce numéro.");
+        }
+
+        validateConsultation(consultation);
+        return consultationRepository.save(consultation);
+    }
+
+    /**
+     * Modifie une consultation programmée dans le futur.
+     */
+    public Consultation updateConsultation(
+            String numero, Consultation consultation) {
+
+        Consultation existing = getConsultationById(numero);
+
+        ensureFutureConsultation(existing);
+        validateConsultation(consultation);
+
+        existing.setDate(consultation.getDate());
+        existing.setPatientId(consultation.getPatientId());
+        existing.setMedecinId(consultation.getMedecinId());
+        existing.setPrescriptions(
+                consultation.getPrescriptions() == null
+                        ? new ArrayList<>()
+                        : consultation.getPrescriptions());
+
+        // On conserve le numéro et le document éventuellement joint.
+        return consultationRepository.save(existing);
+    }
+
+    /**
+     * Supprime une consultation programmée dans le futur.
+     */
+    public void deleteConsultation(String numero) {
+        Consultation consultation = getConsultationById(numero);
+        ensureFutureConsultation(consultation);
+        consultationRepository.delete(consultation);
+    }
+
+    /**
+     * Modifie les prescriptions d'une consultation future.
+     */
+    public Consultation updatePrescriptions(
+            String numero, List<Prescription> prescriptions) {
+
+        Consultation consultation = getConsultationById(numero);
+        ensureFutureConsultation(consultation);
+
+        validatePrescriptions(prescriptions);
+        consultation.setPrescriptions(
+                prescriptions == null
+                        ? new ArrayList<>()
+                        : prescriptions);
+
+        return consultationRepository.save(consultation);
+    }
+
+    /**
+     * Vérifie les données et les références d'une consultation.
+     */
+    private void validateConsultation(Consultation consultation) {
+        if (consultation.getDate() == null
+                || !consultation.getDate().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                    "La date de consultation doit être dans le futur.");
+        }
+
+        if (consultation.getPatientId() == null
+                || consultation.getPatientId().isBlank()
+                || !patientRepository.existsById(consultation.getPatientId())) {
+            throw new ResourceNotFoundException(
+                    "Patient associé à la consultation introuvable.");
+        }
+
+        if (consultation.getMedecinId() == null
+                || consultation.getMedecinId().isBlank()
+                || !medecinRepository.existsById(consultation.getMedecinId())) {
+            throw new ResourceNotFoundException(
+                    "Médecin associé à la consultation introuvable.");
+        }
+
+        validatePrescriptions(consultation.getPrescriptions());
+    }
+
+    /**
+     * Vérifie que les médicaments existent et que le nombre de prises est valide.
+     */
+    private void validatePrescriptions(List<Prescription> prescriptions) {
+        if (prescriptions == null) {
+            return;
+        }
+
+        for (Prescription prescription : prescriptions) {
+            if (prescription.getMedicamentId() == null
+                    || prescription.getMedicamentId().isBlank()
+                    || !medicamentRepository.existsById(
+                    prescription.getMedicamentId())) {
+                throw new ResourceNotFoundException(
+                        "Médicament prescrit introuvable.");
+            }
+
+            if (prescription.getNbPrises() <= 0) {
+                throw new IllegalArgumentException(
+                        "Le nombre de prises doit être supérieur à zéro.");
+            }
+        }
+    }
+
+    /**
+     * Vérifie que la consultation est encore programmée dans le futur.
+     */
+    private void ensureFutureConsultation(Consultation consultation) {
+        if (consultation.getDate() == null
+                || !consultation.getDate().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                    "Seules les consultations futures peuvent être modifiées ou supprimées.");
+        }
+    }
+}
