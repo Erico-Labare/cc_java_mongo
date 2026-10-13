@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: cc_java_mongo
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/medicaldb}
+      auto-index-creation: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    fr.dawan.cc_java_mongo: DEBUG
+    org.springframework.data.mongodb: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: Medical API
+    description: API REST de gestion médicale
