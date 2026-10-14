@@ -1,5 +1,41 @@
 # CC Java MongoDB — API REST de gestion médicale
 
+## Table des matières
+
+- [1. Présentation du projet](#1-présentation-du-projet)
+    - [Fonctionnalités principales](#fonctionnalités-principales)
+- [2. Technologies utilisées](#2-technologies-utilisées)
+- [3. Prérequis](#3-prérequis)
+    - [Vérifier Java](#vérifier-java)
+    - [Vérifier MongoDB](#vérifier-mongodb)
+- [4. Récupération du projet](#4-récupération-du-projet)
+- [5. Configuration de MongoDB](#5-configuration-de-mongodb)
+- [6. Configuration des variables d'environnement](#6-configuration-des-variables-denvironnement)
+- [7. Lancer l'application](#7-lancer-lapplication)
+- [8. Vérifier que l'application fonctionne](#8-vérifier-que-lapplication-fonctionne)
+- [9. Authentification et sécurité](#9-authentification-et-sécurité)
+- [10. Modèle de données MongoDB](#10-modèle-de-données-mongodb)
+- [11. Endpoints REST](#11-endpoints-rest)
+    - [Authentification](#111-authentification)
+    - [Patients](#112-patients)
+    - [Médecins](#113-médecins)
+    - [Médicaments](#114-médicaments)
+    - [Consultations](#115-consultations)
+    - [Documents associés aux consultations](#116-documents-associés-aux-consultations)
+- [12. Validation et gestion des erreurs](#12-validation-et-gestion-des-erreurs)
+- [13. Exécuter les tests automatisés](#13-exécuter-les-tests-automatisés)
+- [14. Analyse de la couverture avec JaCoCo](#14-analyse-de-la-couverture-avec-jacoco)
+- [15. Génération de la JavaDoc](#15-génération-de-la-javadoc)
+- [16. Analyse de qualité avec SonarQube](#16-analyse-de-qualité-avec-sonarqube-facultatif)
+- [17. Architecture du projet](#17-architecture-du-projet)
+- [18. Configuration applicative](#18-configuration-applicative)
+- [19. Scénario de démonstration](#19-scénario-de-démonstration)
+- [20. Dépannage](#20-dépannage)
+- [21. Bonnes pratiques et limites](#21-bonnes-pratiques-et-limites)
+- [22. Dette technique](#22-dette-technique)
+- [23. État du projet](#23-état-du-projet)
+- [24. Licence et contribution](#24-licence-et-contribution)
+
 ## 1. Présentation du projet
 
 **CC Java MongoDB** est une API REST développée avec Java et Spring Boot permettant de gérer les patients, les médecins, les médicaments, les consultations médicales et les prescriptions associées.
@@ -118,7 +154,7 @@ Le fichier `compose-sonarqube.yml` est nécessaire uniquement si l'on souhaite r
 
 ### 5.1. Configuration par défaut
 
-La configuration de MongoDB se trouve dans `src/main/resources/application.yml`.
+La configuration de MongoDB se trouve dans `src/main/resources/application.yaml`.
 
 Les paramètres principaux sont :
 
@@ -327,21 +363,32 @@ Une réponse de santé positive ressemble à :
 
 Le détail exact de la réponse dépend de l'état des composants surveillés.
 
-### 8.2. Swagger UI
+### 8.2. Swagger UI et spécification OpenAPI
 
-La documentation interactive est accessible à l'adresse :
+La documentation interactive Swagger UI est accessible à l'adresse :
 
 ```text
 http://localhost:8081/swagger-ui/index.html
 ```
 
-Le document OpenAPI est accessible ici :
+La spécification OpenAPI (format JSON) est accessible à l'adresse :
 
 ```text
 http://localhost:8081/v3/api-docs
 ```
 
-Swagger permet de consulter les endpoints, leurs paramètres et leurs modèles de données.
+Pour télécharger la spécification OpenAPI en tant que fichier JSON :
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8081/v3/api-docs" -OutFile "openapi.json"
+```
+
+Cette spécification peut être utilisée pour :
+- Générer des clients SDK dans différents langages
+- Valider les contrats d'API
+- Intégrer l'API dans des outils de documentation ou de test
+
+Swagger UI permet de consulter les endpoints, leurs paramètres et leurs modèles de données.
 
 Les routes métier protégées nécessitent une authentification. Il faut donc obtenir un JWT puis le fournir dans l'en-tête `Authorization` pour les tester.
 
@@ -666,17 +713,22 @@ Pour exécuter la suite complète et vérifier également la construction du pro
 .\mvnw.cmd clean verify
 ```
 
-Les tests du projet comprennent notamment :
+Les tests du projet comprennent 12 classes de test :
 
 - `CcJavaMongoApplicationTests` : test du contexte Spring Boot.
 - `PatientServiceTest` : tests du service patient.
 - `MedecinServiceTest` : tests du service médecin.
 - `MedicamentServiceTest` : tests du service médicament.
 - `ConsultationServiceTest` : tests du service consultation.
+- `PatientControllerTest` : tests du contrôleur patient.
+- `MedecinControllerTest` : tests du contrôleur médecin.
+- `MedicamentControllerTest` : tests du contrôleur médicament.
+- `ConsultationControllerTest` : tests du contrôleur consultation.
+- `DocumentControllerTest` : tests du contrôleur document.
+- `AuthControllerTest` : tests du contrôleur d'authentification.
+- `JwtSecurityTest` : tests de sécurité JWT.
 
-La dernière exécution vérifiée pendant le développement a donné **24 tests exécutés, aucune erreur, aucun échec et aucun test ignoré**. Ce résultat correspond à l'état du projet à ce moment-là et doit être confirmé après toute modification.
-
-Les tests unitaires des services utilisent Mockito pour isoler la logique métier de ses dépendances. Le test de contexte vérifie le démarrage de l'application Spring Boot.
+Le nombre exact de tests doit être obtenu en exécutant `mvnw.cmd test` ou `mvnw.cmd clean verify`. Les tests unitaires des services utilisent Mockito pour isoler la logique métier de ses dépendances. Les tests de contrôleurs et de sécurité valident les endpoints et la configuration Spring Security.
 
 ## 14. Analyse de la couverture avec JaCoCo
 
@@ -698,13 +750,48 @@ Ouvrir ce fichier dans un navigateur pour examiner la couverture des classes, m�
 
 La couverture doit être interprétée avec les tests réellement exécutés : une couverture élevée ne garantit pas à elle seule que tous les scénarios métier sont correctement testés.
 
-## 15. Analyse de qualité avec SonarQube (facultatif)
+## 15. Génération de la JavaDoc
+
+Le projet est entièrement documenté avec JavaDoc en français. La documentation HTML peut être générée avec Maven.
+
+### 15.1. Générer la JavaDoc
+
+Depuis la racine du projet, exécuter :
+
+```powershell
+.\mvnw.cmd javadoc:javadoc
+```
+
+Cette commande génère la documentation HTML dans le dossier `target/site/apidocs/`.
+
+### 15.2. Consulter la JavaDoc
+
+Ouvrir le fichier suivant dans un navigateur web :
+
+```text
+target/site/apidocs/index.html
+```
+
+La documentation contient :
+- La description de tous les packages du projet
+- La documentation des classes publiques et protégées
+- La description des méthodes avec leurs paramètres et valeurs de retour
+- Les liens entre les classes via les annotations `@see` et `@link`
+
+### 15.3. Configuration Maven JavaDoc
+
+Le plugin Maven JavaDoc est configuré dans `pom.xml` avec les paramètres suivants :
+- Encodage UTF-8 pour les fichiers source et la documentation générée
+- Niveau d'affichage `protected` (éléments publics et protégés)
+- Contrôle de syntaxe activé (`doclint:all,-missing`) pour détecter les erreurs de JavaDoc tout en ignorant les commentaires manquants sur les getters/setters standards des DTO
+
+## 16. Analyse de qualité avec SonarQube (facultatif)
 
 SonarQube est utilisé pour analyser les problèmes de sécurité, de fiabilité, de maintenabilité, de couverture et de duplication du code.
 
 Cette étape n'est pas nécessaire pour lancer l'API.
 
-### 15.1. Démarrer SonarQube avec Docker
+### 16.1. Démarrer SonarQube avec Docker
 
 Le projet dispose d'un fichier `compose-sonarqube.yml` utilisé pendant le développement.
 
@@ -724,7 +811,7 @@ Le premier démarrage peut prendre plusieurs minutes. Il faut attendre que le se
 
 Le fichier Compose utilise des volumes Docker pour conserver les données, extensions et journaux entre les redémarrages.
 
-### 15.2. Configurer le projet dans SonarQube
+### 16.2. Configurer le projet dans SonarQube
 
 1. Ouvrir l'interface SonarQube.
 2. Créer un projet nommé `CC Java MongoDB`.
@@ -732,7 +819,7 @@ Le fichier Compose utilise des volumes Docker pour conserver les données, exten
 4. Générer un jeton d'analyse depuis le compte utilisateur.
 5. Conserver ce jeton localement sans le publier.
 
-### 15.3. Lancer une analyse
+### 16.3. Lancer une analyse
 
 Le jeton doit être chargé dans la variable d'environnement `SONAR_TOKEN`.
 
@@ -776,7 +863,7 @@ Si SonarQube renvoie `401 Unauthorized`, vérifier que le jeton est valide, qu'i
 
 Les résultats sont consultables dans l'interface SonarQube. Les indicateurs dépendent de l'état du code, des tests et de la configuration au moment de l'analyse.
 
-## 16. Architecture du projet
+## 17. Architecture du projet
 
 Le code est organisé par responsabilités dans le package principal :
 
@@ -805,9 +892,9 @@ fr.dawan.cc_java_mongo
 
 Cette architecture sépare les responsabilités et facilite les tests, la maintenance et les évolutions du projet.
 
-## 17. Configuration applicative
+## 18. Configuration applicative
 
-Les principaux paramètres se trouvent dans `src/main/resources/application.yml`.
+Les principaux paramètres se trouvent dans `src/main/resources/application.yaml`.
 
 | Paramètre | Valeur par défaut ou rôle |
 |---|---|
@@ -819,11 +906,56 @@ Les principaux paramètres se trouvent dans `src/main/resources/application.yml`
 | Durée de validité du JWT | `3600000` millisecondes |
 | Endpoints Actuator exposés | `health`, `info` |
 
-La clé JWT et les paramètres du compte initial sont injectés par variables d'environnement. Il ne faut pas inscrire de secrets dans `application.yml`.
+La clé JWT et les paramètres du compte initial sont injectés par variables d'environnement. Il ne faut pas inscrire de secrets dans `application.yaml`.
 
 Les endpoints de documentation Swagger et le contrôle de santé sont autorisés par la configuration de sécurité actuelle. Les autres requêtes nécessitent une authentification valide.
 
-## 18. Dépannage
+## 19. Scénario de démonstration
+
+Ce scénario propose un ordre logique de démonstration pour présenter le projet lors de l'évaluation orale.
+
+### 19.1. Lancement et vérification
+
+1. **Démarrer MongoDB** : vérifier que MongoDB est accessible sur le port 27017.
+2. **Configurer les variables d'environnement** : définir `JWT_SECRET`, `BOOTSTRAP_USER_ENABLED=true`, `APP_ADMIN_USERNAME` et `APP_ADMIN_PASSWORD`.
+3. **Lancer l'application** : exécuter `.\mvnw.cmd spring-boot:run` ou lancer depuis IntelliJ.
+4. **Vérifier le contrôle de santé** : accéder à `http://localhost:8081/actuator/health` et confirmer le statut `UP`.
+5. **Accéder à Swagger UI** : ouvrir `http://localhost:8081/swagger-ui/index.html` pour montrer la documentation interactive.
+
+### 19.2. Authentification
+
+6. **Se connecter** : appeler `POST /api/auth/login` avec les identifiants configurés pour obtenir un JWT.
+7. **Montrer la réponse** : expliquer la structure du token, le type `Bearer` et la durée d'expiration.
+
+### 19.3. Opérations métier représentatives
+
+8. **Créer un patient** : utiliser `POST /api/patients` avec un numéro de sécurité sociale valide.
+9. **Créer un médecin** : utiliser `POST /api/medecins` avec un matricule.
+10. **Créer un médicament** : utiliser `POST /api/medicaments` avec un code et un libellé.
+11. **Créer une consultation** : utiliser `POST /api/consultations` en référençant les entités créées, avec une date future et des prescriptions.
+12. **Lister les consultations d'un patient** : utiliser `GET /api/consultations/patient/{patientId}` pour montrer la pagination.
+
+### 19.4. Validation d'une erreur
+
+13. **Tester une erreur de validation** : tenter de créer une consultation avec une date passée ou un nombre de prises nul.
+14. **Observer la réponse** : montrer le code HTTP 400 et les détails de l'erreur renvoyés par `GlobalExceptionHandler`.
+
+### 19.5. Qualité du code
+
+15. **Exécuter les tests** : lancer `.\mvnw.cmd clean verify` et montrer que tous les tests passent.
+16. **Générer la JavaDoc** : exécuter `.\mvnw.cmd javadoc:javadoc` et ouvrir `target/site/apidocs/index.html`.
+17. **Consulter le rapport JaCoCo** : ouvrir `target/site/jacoco/index.html` pour montrer la couverture de tests.
+18. **Analyse SonarQube** (si disponible) : montrer l'interface SonarQube avec les indicateurs de qualité.
+
+### 19.6. Architecture et bonnes pratiques
+
+19. **Présenter l'architecture** : expliquer la séparation des couches (controller, service, repository, model, dto, exception, security, config).
+20. **Montrer la sécurité** : expliquer le mécanisme JWT, le filtre `JwtAuthenticationFilter` et la configuration `SecurityConfig`.
+21. **Expliquer la validation** : montrer les annotations Jakarta Bean Validation dans les DTO et la gestion centralisée des exceptions.
+
+Ce scénario couvre les aspects principaux du projet : configuration, authentification, opérations métier, gestion des erreurs, tests, documentation et architecture.
+
+## 20. Dépannage
 
 ### L'application ne démarre pas
 
@@ -878,7 +1010,7 @@ Modifier temporairement la propriété `server.port` dans la configuration ou ut
 docker logs cc-java-mongo-sonarqube
 ```
 
-## 19. Bonnes pratiques et limites
+## 21. Bonnes pratiques et limites
 
 - Ne jamais commiter de secrets, de jetons JWT ou de mots de passe.
 - Ne jamais utiliser de véritables données médicales pour les tests locaux.
@@ -890,7 +1022,40 @@ docker logs cc-java-mongo-sonarqube
 
 Le projet constitue une base d'API REST pédagogique. Une mise en production nécessiterait notamment une revue de sécurité complète, une politique de gestion des secrets, une configuration de déploiement adaptée et des tests d'intégration plus étendus.
 
-## 20. État du projet
+## 22. Dette technique
+
+Cette section recense les limites identifiées et les points d'amélioration possibles du projet.
+
+### 22.1. Limites actuelles
+
+- **Absence de rôles et d'autorisations granulaires** : tous les utilisateurs authentifiés ont les mêmes droits. Aucune distinction par rôle (admin, médecin, secrétaire) n'est implémentée.
+- **Bootstrap utilisateur** : le mécanisme de création du compte initial est conçu pour le développement. Il devrait être désactivé ou remplacé par une procédure adaptée en production.
+- **Pas de tests d'intégration** : les tests actuels sont des tests unitaires de services et de contrôleurs avec mocks. Aucun test d'intégration avec une base MongoDB réelle n'est présent.
+- **Couverture de tests non mesurée** : le rapport JaCoCo existe mais le pourcentage de couverture n'est pas documenté et doit être vérifié après chaque modification.
+- **Pas de validation des rôles dans les endpoints** : la configuration Spring Security protège les endpoints par authentification, mais ne vérifie pas les rôles pour autoriser ou refuser des opérations spécifiques.
+- **Gestion des documents GridFS** : le comportement exact en cas de remplacement d'un fichier existant n'est pas explicitement documenté dans le code et doit être vérifié.
+- **Pas de pagination sur les médicaments** : contrairement aux patients et médecins, l'endpoint des médicaments ne propose pas de pagination.
+
+### 22.2. Améliorations possibles
+
+- **Implémenter des rôles et des autorisations** : ajouter des rôles (ADMIN, MEDECIN, SECRETAIRE) et utiliser `@PreAuthorize` ou des règles de sécurité pour restreindre l'accès aux endpoints.
+- **Ajouter des tests d'intégration** : créer des tests avec `@SpringBootTest` et une base MongoDB de test pour valider le comportement complet de l'application.
+- **Améliorer la couverture de tests** : identifier les classes et méthodes non couvertes et ajouter des tests pour atteindre un pourcentage de couverture plus élevé.
+- **Ajouter des tests de repository** : tester les requêtes MongoDB personnalisées si elles sont ajoutées.
+- **Implémenter le rafraîchissement des tokens JWT** : ajouter un mécanisme de refresh token pour améliorer la sécurité et l'expérience utilisateur.
+- **Ajouter des logs structurés** : utiliser un framework de logging structuré pour faciliter le monitoring et le débogage en production.
+- **Ajouter des métriques personnalisées** : utiliser Spring Boot Actuator ou Micrometer pour exposer des métriques métier (nombre de consultations créées, etc.).
+- **Implémenter la pagination pour les médicaments** : ajouter les paramètres `page`, `size` et `sort` à l'endpoint des médicaments pour cohérence avec les autres entités.
+- **Ajouter des contraintes d'unicité** : vérifier que les identifiants métier (numéro de sécurité sociale, matricule, code médicament) sont uniques dans la base.
+- **Documenter les codes d'erreur** : créer une liste exhaustive des codes HTTP renvoyés par `GlobalExceptionHandler` avec leurs causes et leurs solutions.
+
+### 22.3. Points à confirmer
+
+- **Couverture de tests actuelle** : exécuter `mvnw.cmd clean verify` et consulter le rapport JaCoCo pour obtenir le pourcentage réel de couverture.
+- **Indicateurs SonarQube** : si SonarQube est utilisé, vérifier les notes de fiabilité, maintenabilité, sécurité et couverture actuelles.
+- **Comportement de remplacement des documents** : vérifier dans `DocumentService` si un fichier existant est remplacé ou si une erreur est renvoyée.
+
+## 23. État du projet
 
 À la dernière vérification effectuée pendant le développement :
 
@@ -899,15 +1064,13 @@ Le projet constitue une base d'API REST pédagogique. Une mise en production né
 - La connexion JWT a été testée avec succès.
 - Les endpoints protégés ont été testés avec un jeton valide.
 - Swagger UI est accessible.
-- Les tests automatisés passent : 24 tests, sans échec.
-- L'analyse SonarQube se termine par `BUILD SUCCESS`.
-- La fiabilité SonarQube est notée A.
-- La maintenabilité SonarQube est notée A.
+- Les tests automatisés sont présents (12 classes de test). Le nombre exact de tests doit être confirmé en exécutant `mvnw.cmd test`.
+- L'analyse SonarQube se termine par `BUILD SUCCESS` (si le plugin sonar-maven-plugin est utilisé manuellement).
 - Des améliorations restent possibles sur la couverture des tests et sur certains problèmes de sécurité ou de maintenabilité.
 
-Ces résultats décrivent l'état constaté pendant le développement et devront être actualisés après les prochaines évolutions.
+Ces résultats décrivent l'état constaté pendant le développement et devront être actualisés après les prochaines évolutions. Pour obtenir les indicateurs actuels (nombre de tests, couverture JaCoCo, notes SonarQube), exécuter les commandes correspondantes et consulter les rapports générés.
 
-## 21. Licence et contribution
+## 24. Licence et contribution
 
 Aucune licence spécifique n'est définie dans cette documentation. Ajouter un fichier de licence si le projet doit être distribué selon des conditions particulières.
 
