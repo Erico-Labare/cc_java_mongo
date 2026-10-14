@@ -2,7 +2,11 @@
 package fr.dawan.cc_java_mongo.dto;
 
 /**
- * Données renvoyées par l'API pour un médicament.
+ * DTO pour les données de réponse d'un médicament.
+ * <p>
+ * Cette classe contient les données renvoyées par l'API après une opération
+ * sur un médicament (création, lecture, modification).
+ * </p>
  */
 public class MedicamentResponse {
 

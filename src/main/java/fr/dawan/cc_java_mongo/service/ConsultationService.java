@@ -19,7 +19,17 @@ import java.util.List;
 import java.time.Clock;
 
 /**
- * Gère les opérations métier relatives aux consultations.
+ * Service métier pour la gestion des consultations.
+ * <p>
+ * Ce service encapsule la logique métier liée aux consultations : création,
+ * modification, suppression, recherche et validation des données.
+ * Il applique des règles métier spécifiques comme l'interdiction de modifier
+ * les consultations passées et la validation des références aux patients,
+ * médecins et médicaments.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.model.Consultation
+ * @see fr.dawan.cc_java_mongo.repository.ConsultationRepository
  */
 @Service
 public class ConsultationService {
@@ -30,6 +40,14 @@ public class ConsultationService {
     private final MedicamentRepository medicamentRepository;
     private final Clock clock;
 
+    /**
+     * Construit le service avec les repositories nécessaires.
+     *
+     * @param consultationRepository le repository des consultations
+     * @param patientRepository le repository des patients
+     * @param medecinRepository le repository des médecins
+     * @param medicamentRepository le repository des médicaments
+     */
     public ConsultationService(
             ConsultationRepository consultationRepository,
             PatientRepository patientRepository,
@@ -44,6 +62,9 @@ public class ConsultationService {
 
     /**
      * Récupère les consultations avec pagination.
+     *
+     * @param pageable paramètres de pagination et de tri
+     * @return page de consultations
      */
     public Page<Consultation> getAllConsultations(Pageable pageable) {
         return consultationRepository.findAll(pageable);
@@ -51,6 +72,10 @@ public class ConsultationService {
 
     /**
      * Récupère les consultations d'un patient avec pagination.
+     *
+     * @param patientId identifiant du patient
+     * @param pageable paramètres de pagination et de tri
+     * @return page de consultations du patient
      */
     public Page<Consultation> getConsultationsByPatient(
             String patientId, Pageable pageable) {
@@ -65,6 +90,9 @@ public class ConsultationService {
 
     /**
      * Recherche une consultation par son numéro.
+     *
+     * @param numero le numéro de la consultation
+     * @return la consultation trouvée
      */
     public Consultation getConsultationById(String numero) {
         return consultationRepository.findById(numero)
@@ -74,6 +102,9 @@ public class ConsultationService {
 
     /**
      * Crée une consultation programmée dans le futur.
+     *
+     * @param consultation la consultation à créer
+     * @return la consultation créée
      */
     public Consultation createConsultation(Consultation consultation) {
         if (consultation.getNumero() == null
@@ -93,6 +124,10 @@ public class ConsultationService {
 
     /**
      * Modifie une consultation programmée dans le futur.
+     *
+     * @param numero le numéro de la consultation à modifier
+     * @param consultation les nouvelles données de la consultation
+     * @return la consultation modifiée
      */
     public Consultation updateConsultation(
             String numero, Consultation consultation) {
@@ -116,6 +151,8 @@ public class ConsultationService {
 
     /**
      * Supprime une consultation programmée dans le futur.
+     *
+     * @param numero le numéro de la consultation à supprimer
      */
     public void deleteConsultation(String numero) {
         Consultation consultation = getConsultationById(numero);
@@ -125,6 +162,10 @@ public class ConsultationService {
 
     /**
      * Modifie les prescriptions d'une consultation future.
+     *
+     * @param numero le numéro de la consultation
+     * @param prescriptions la nouvelle liste de prescriptions
+     * @return la consultation modifiée
      */
     public Consultation updatePrescriptions(
             String numero, List<Prescription> prescriptions) {
@@ -144,6 +185,8 @@ public class ConsultationService {
 
     /**
      * Vérifie les données et les références d'une consultation.
+     *
+     * @param consultation la consultation à valider
      */
     private void validateConsultation(Consultation consultation) {
         if (consultation.getDate() == null
@@ -172,6 +215,8 @@ public class ConsultationService {
 
     /**
      * Vérifie que les médicaments existent et que le nombre de prises est valide.
+     *
+     * @param prescriptions la liste des prescriptions à valider
      */
     private void validatePrescriptions(List<Prescription> prescriptions) {
         if (prescriptions == null) {
@@ -196,6 +241,8 @@ public class ConsultationService {
 
     /**
      * Vérifie que la consultation est encore programmée dans le futur.
+     *
+     * @param consultation la consultation à vérifier
      */
     private void ensureFutureConsultation(Consultation consultation) {
         if (consultation.getDate() == null

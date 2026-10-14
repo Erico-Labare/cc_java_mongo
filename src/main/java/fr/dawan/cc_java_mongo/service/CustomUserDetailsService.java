@@ -8,17 +8,44 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-/** Charge les informations d'un utilisateur depuis MongoDB. */
+/**
+ * Service Spring Security pour charger les détails d'un utilisateur depuis MongoDB.
+ * <p>
+ * Cette implémentation de {@link UserDetailsService} charge les informations
+ * d'authentification d'un utilisateur à partir de la base MongoDB et les convertit
+ * en un objet {@link UserDetails} compatible avec Spring Security.
+ * </p>
+ *
+ * @see org.springframework.security.core.userdetails.UserDetailsService
+ * @see fr.dawan.cc_java_mongo.model.Utilisateur
+ */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UtilisateurRepository utilisateurRepository;
 
+    /**
+     * Construit le service avec le repository des utilisateurs.
+     *
+     * @param utilisateurRepository le repository pour accéder aux utilisateurs
+     */
     public CustomUserDetailsService(
             UtilisateurRepository utilisateurRepository) {
         this.utilisateurRepository = utilisateurRepository;
     }
 
+    /**
+     * Charge les détails de l'utilisateur par son nom d'utilisateur.
+     * <p>
+     * Recherche l'utilisateur dans MongoDB, normalise son rôle (supprime le préfixe
+     * ROLE_ s'il est présent, applique USER par défaut si vide) et construit
+     * un objet UserDetails Spring Security.
+     * </p>
+     *
+     * @param username le nom d'utilisateur recherché
+     * @return les détails de l'utilisateur pour Spring Security
+     * @throws UsernameNotFoundException si l'utilisateur n'existe pas
+     */
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {

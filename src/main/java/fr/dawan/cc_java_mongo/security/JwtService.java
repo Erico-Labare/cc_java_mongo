@@ -13,13 +13,30 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 
-/** Génère et vérifie les jetons JWT de l'application. */
+/**
+ * Service de génération et de vérification des jetons JWT.
+ * <p>
+ * Ce service utilise la bibliothèque JJWT pour créer et valider des jetons JWT
+ * signés avec une clé secrète configurée. Les jetons contiennent le nom d'utilisateur
+ * comme sujet et expirent après une durée configurée.
+ * </p>
+ *
+ * @see io.jsonwebtoken.Jwts
+ * @see org.springframework.security.core.userdetails.UserDetails
+ */
 @Service
 public class JwtService {
 
     private final SecretKey signingKey;
     private final long expirationMs;
 
+    /**
+     * Construit le service JWT avec la clé secrète et la durée d'expiration.
+     *
+     * @param secret la clé secrète encodée en BASE64 (configurée via {@code app.jwt.secret})
+     * @param expirationMs la durée de validité du jeton en millisecondes
+     * @throws IllegalStateException si la clé secrète n'est pas configurée
+     */
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs) {
@@ -34,7 +51,12 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    /** Génère un jeton JWT pour l'utilisateur indiqué. */
+    /**
+     * Génère un jeton JWT pour l'utilisateur indiqué.
+     *
+     * @param userDetails les détails de l'utilisateur authentifié
+     * @return le jeton JWT signé
+     */
     public String generateToken(UserDetails userDetails) {
         Instant now = Instant.now();
 
@@ -46,12 +68,27 @@ public class JwtService {
                 .compact();
     }
 
-    /** Extrait le nom d'utilisateur du jeton. */
+    /**
+     * Extrait le nom d'utilisateur du jeton JWT.
+     *
+     * @param token le jeton JWT à analyser
+     * @return le nom d'utilisateur contenu dans le jeton
+     */
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    /** Vérifie le jeton et son association à l'utilisateur connecté. */
+    /**
+     * Vérifie la validité du jeton et son association à l'utilisateur.
+     * <p>
+     * Le jeton est valide s'il n'est pas expiré et si le sujet correspond
+     * au nom d'utilisateur fourni.
+     * </p>
+     *
+     * @param token le jeton JWT à vérifier
+     * @param userDetails les détails de l'utilisateur à comparer
+     * @return {@code true} si le jeton est valide, {@code false} sinon
+     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             Claims claims = extractAllClaims(token);
@@ -63,11 +100,21 @@ public class JwtService {
         }
     }
 
-    /** Retourne la date d'expiration configurée, en millisecondes. */
+    /**
+     * Retourne la durée d'expiration configurée, en millisecondes.
+     *
+     * @return la durée de validité des jetons en millisecondes
+     */
     public long getExpirationMs() {
         return expirationMs;
     }
 
+    /**
+     * Extrait toutes les claims (revendications) du jeton JWT.
+     *
+     * @param token le jeton JWT à analyser
+     * @return les claims contenues dans le jeton
+     */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(signingKey)

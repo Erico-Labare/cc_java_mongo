@@ -20,7 +20,16 @@ import java.io.InputStream;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
- * Gère les documents associés aux consultations avec MongoDB GridFS.
+ * Service métier pour la gestion des documents avec MongoDB GridFS.
+ * <p>
+ * Ce service gère le stockage et la récupération de fichiers associés
+ * aux consultations médicales en utilisant MongoDB GridFS pour les fichiers
+ * de taille importante. Il remplace automatiquement un document existant
+ * si un nouveau est uploadé pour la même consultation.
+ * </p>
+ *
+ * @see org.springframework.data.mongodb.gridfs.GridFsTemplate
+ * @see fr.dawan.cc_java_mongo.model.Consultation
  */
 @Service
 public class DocumentService {
@@ -28,6 +37,12 @@ public class DocumentService {
     private final GridFsTemplate gridFsTemplate;
     private final ConsultationRepository consultationRepository;
 
+    /**
+     * Construit le service avec le template GridFS et le repository des consultations.
+     *
+     * @param gridFsTemplate le template pour les opérations GridFS
+     * @param consultationRepository le repository des consultations
+     */
     public DocumentService(
             GridFsTemplate gridFsTemplate,
             ConsultationRepository consultationRepository) {

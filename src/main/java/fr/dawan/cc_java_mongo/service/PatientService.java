@@ -8,13 +8,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 /**
- * Gère les opérations métier relatives aux patients.
+ * Service métier pour la gestion des patients.
+ * <p>
+ * Ce service encapsule la logique métier liée aux patients : création,
+ * modification, suppression, recherche et validation des données.
+ * Il utilise le repository pour les opérations de persistance.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.model.Patient
+ * @see fr.dawan.cc_java_mongo.repository.PatientRepository
  */
 @Service
 public class PatientService {
 
     private final PatientRepository patientRepository;
 
+    /**
+     * Construit le service avec le repository des patients.
+     *
+     * @param patientRepository le repository pour accéder aux patients
+     */
     public PatientService(PatientRepository patientRepository) {
         this.patientRepository = patientRepository;
     }

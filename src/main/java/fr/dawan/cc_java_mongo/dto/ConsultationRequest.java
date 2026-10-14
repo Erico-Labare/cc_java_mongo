@@ -12,7 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Données reçues pour créer ou modifier une consultation.
+ * DTO pour les données de création ou modification d'une consultation.
+ * <p>
+ * Cette classe contient les données reçues du client pour créer ou modifier
+ * une consultation. Les champs sont validés par les annotations Jakarta Validation.
+ * La date de la consultation doit être dans le futur.
+ * </p>
  */
 public class ConsultationRequest {
 

@@ -15,7 +15,24 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 /**
- * Expose les endpoints REST de gestion des documents.
+ * Contrôleur REST pour la gestion des documents associés aux consultations.
+ * <p>
+ * Ce contrôleur expose les endpoints pour l'upload et le téléchargement
+ * de documents stockés dans MongoDB GridFS :
+ * </p>
+ * <ul>
+ * <li>{@code POST /api/consultations/{numero}/document} - Upload d'un document</li>
+ * <li>{@code GET /api/consultations/{numero}/document} - Téléchargement d'un document</li>
+ * </ul>
+ * <p>
+ * Les documents sont stockés dans GridFS et associés à une consultation
+ * via son identifiant GridFS. Si un document existe déjà pour une consultation,
+ * il est remplacé lors d'un nouvel upload.
+ * Tous les endpoints nécessitent une authentification JWT valide.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.service.DocumentService
+ * @see org.springframework.data.mongodb.gridfs.GridFsTemplate
  */
 @RestController
 @RequestMapping("/api/consultations")
@@ -23,6 +40,11 @@ public class DocumentController {
 
     private final DocumentService documentService;
 
+    /**
+     * Construit le contrôleur avec le service des documents.
+     *
+     * @param documentService le service métier des documents
+     */
     public DocumentController(DocumentService documentService) {
         this.documentService = documentService;
     }

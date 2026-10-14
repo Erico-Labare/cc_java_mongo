@@ -8,13 +8,26 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Gère les opérations métier relatives aux médicaments.
+ * Service métier pour la gestion des médicaments.
+ * <p>
+ * Ce service encapsule la logique métier liée aux médicaments : création,
+ * modification, suppression, recherche et validation des données.
+ * Il utilise le repository pour les opérations de persistance.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.model.Medicament
+ * @see fr.dawan.cc_java_mongo.repository.MedicamentRepository
  */
 @Service
 public class MedicamentService {
 
     private final MedicamentRepository medicamentRepository;
 
+    /**
+     * Construit le service avec le repository des médicaments.
+     *
+     * @param medicamentRepository le repository pour accéder aux médicaments
+     */
     public MedicamentService(MedicamentRepository medicamentRepository) {
         this.medicamentRepository = medicamentRepository;
     }

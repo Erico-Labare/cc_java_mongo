@@ -16,12 +16,33 @@ import java.util.Map;
 
 import java.time.Clock;
 
-/** Centralise le traitement des exceptions de l'API REST. */
+/**
+ * Centralise le traitement des exceptions de l'API REST.
+ * <p>
+ * Cette classe intercepte les exceptions levées par l'application et les convertit
+ * en réponses HTTP appropriées avec un format JSON cohérent. Elle gère notamment :
+ * <ul>
+ * <li>Les ressources non trouvées ({@link ResourceNotFoundException}) → 404</li>
+ * <li>Les erreurs de validation ({@link MethodArgumentNotValidException}) → 400</li>
+ * <li>Les erreurs d'authentification → 401</li>
+ * <li>Les arguments invalides ({@link IllegalArgumentException}) → 400</li>
+ * <li>Les erreurs de format de message → 400</li>
+ * <li>Les exceptions inattendues → 500</li>
+ * </ul>
+ *
+ * @see org.springframework.web.bind.annotation.RestControllerAdvice
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private final Clock clock = Clock.systemDefaultZone();
 
+    /**
+     * Gère les exceptions de ressource non trouvée.
+     *
+     * @param exception l'exception levée
+     * @return une réponse HTTP 404 avec le message d'erreur
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(
             ResourceNotFoundException exception) {
@@ -30,6 +51,12 @@ public class GlobalExceptionHandler {
                 exception.getMessage());
     }
 
+    /**
+     * Gère les exceptions d'argument invalide.
+     *
+     * @param exception l'exception levée
+     * @return une réponse HTTP 400 avec le message d'erreur
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(
             IllegalArgumentException exception) {
@@ -38,6 +65,12 @@ public class GlobalExceptionHandler {
                 exception.getMessage());
     }
 
+    /**
+     * Gère les exceptions d'authentification.
+     *
+     * @param exception l'exception levée
+     * @return une réponse HTTP 401 avec un message générique
+     */
     @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
     public ResponseEntity<Map<String, Object>> handleAuthenticationException(
             Exception exception) {
@@ -47,6 +80,16 @@ public class GlobalExceptionHandler {
     }
 
 
+    /**
+     * Gère les exceptions de validation des arguments de requête.
+     * <p>
+     * Extrait tous les erreurs de validation des champs et les retourne
+     * dans une réponse structurée.
+     * </p>
+     *
+     * @param exception l'exception de validation
+     * @return une réponse HTTP 400 avec les détails des erreurs de validation
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(
             MethodArgumentNotValidException exception) {
@@ -67,6 +110,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    /**
+     * Gère les exceptions de lecture du corps de la requête.
+     *
+     * @param exception l'exception levée
+     * @return une réponse HTTP 400 avec un message générique
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleUnreadableMessage(
             HttpMessageNotReadableException exception) {
@@ -75,6 +124,16 @@ public class GlobalExceptionHandler {
                 "Le corps de la requête est absent ou mal formé.");
     }
 
+    /**
+     * Gère toutes les exceptions non gérées spécifiquement.
+     * <p>
+     * Ce gestionnaire de dernier recours capture les exceptions inattendues
+     * pour éviter de renvoyer des détails techniques au client.
+     * </p>
+     *
+     * @param exception l'exception levée
+     * @return une réponse HTTP 500 avec un message générique
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(
             Exception exception) {
@@ -83,6 +142,13 @@ public class GlobalExceptionHandler {
                 "Une erreur interne est survenue.");
     }
 
+    /**
+     * Construit une réponse d'erreur standardisée.
+     *
+     * @param status le statut HTTP de la réponse
+     * @param message le message d'erreur
+     * @return une ResponseEntity avec le corps de réponse structuré
+     */
     private ResponseEntity<Map<String, Object>> buildResponse(
             HttpStatus status,
             String message) {

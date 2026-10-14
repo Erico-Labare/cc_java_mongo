@@ -3,7 +3,13 @@ package fr.dawan.cc_java_mongo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-/** Données nécessaires à la connexion d'un utilisateur. */
+/**
+ * DTO pour les données de connexion d'un utilisateur.
+ * <p>
+ * Cette classe contient les identifiants (nom d'utilisateur et mot de passe)
+ * nécessaires pour authentifier un utilisateur et obtenir un jeton JWT.
+ * </p>
+ */
 public class LoginRequest {
 
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")

@@ -1,7 +1,13 @@
 
 package fr.dawan.cc_java_mongo.dto;
 
-/** Réponse renvoyée après une authentification réussie. */
+/**
+ * DTO pour la réponse d'authentification.
+ * <p>
+ * Cette classe contient les données renvoyées après une authentification réussie :
+ * le jeton JWT, son type et sa durée de validité.
+ * </p>
+ */
 public class LoginResponse {
 
     private String token;

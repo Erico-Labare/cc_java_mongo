@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Données renvoyées par l'API pour une consultation.
+ * DTO pour les données de réponse d'une consultation.
+ * <p>
+ * Cette classe contient les données renvoyées par l'API après une opération
+ * sur une consultation (création, lecture, modification).
+ * </p>
  */
 public class ConsultationResponse {
 

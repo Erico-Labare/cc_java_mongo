@@ -20,7 +20,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Expose les endpoints REST de gestion des consultations.
+ * Contrôleur REST pour la gestion des consultations.
+ * <p>
+ * Ce contrôleur expose les endpoints CRUD pour les consultations :
+ * </p>
+ * <ul>
+ * <li>{@code GET /api/consultations} - Liste des consultations avec pagination</li>
+ * <li>{@code GET /api/consultations/patient/{patientId}} - Consultations d'un patient</li>
+ * <li>{@code GET /api/consultations/{numero}} - Détails d'une consultation</li>
+ * <li>{@code POST /api/consultations} - Création d'une consultation future</li>
+ * <li>{@code PUT /api/consultations/{numero}} - Modification d'une consultation future</li>
+ * <li>{@code DELETE /api/consultations/{numero}} - Suppression d'une consultation future</li>
+ * <li>{@code PUT /api/consultations/{numero}/prescriptions} - Modification des prescriptions</li>
+ * </ul>
+ * <p>
+ * Les opérations de modification et suppression sont restreintes aux consultations futures.
+ * Tous les endpoints nécessitent une authentification JWT valide.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.service.ConsultationService
+ * @see fr.dawan.cc_java_mongo.dto.ConsultationRequest
+ * @see fr.dawan.cc_java_mongo.dto.ConsultationResponse
  */
 @RestController
 @RequestMapping("/api/consultations")
@@ -28,6 +48,11 @@ public class ConsultationController {
 
     private final ConsultationService consultationService;
 
+    /**
+     * Construit le contrôleur avec le service des consultations.
+     *
+     * @param consultationService le service métier des consultations
+     */
     public ConsultationController(ConsultationService consultationService) {
         this.consultationService = consultationService;
     }

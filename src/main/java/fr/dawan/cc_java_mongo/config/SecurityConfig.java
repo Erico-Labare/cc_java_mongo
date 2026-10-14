@@ -16,11 +16,35 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configure l'authentification et la protection de l'API REST.
+ * Configuration Spring Security pour l'authentification et l'autorisation.
+ * <p>
+ * Cette configuration définit les règles de sécurité de l'API REST :
+ * <ul>
+ * <li>Authentification basée sur JWT via {@link fr.dawan.cc_java_mongo.security.JwtAuthenticationFilter}</li>
+ * <li>Protection CSRF désactivée (API stateless)</li>
+ * <li>Sessions HTTP désactivées (authentification par token uniquement)</li>
+ * <li>Endpoints publics : authentification, health check, documentation Swagger</li>
+ * <li>Tous les autres endpoints nécessitent une authentification JWT valide</li>
+ * </ul>
+ *
+ * @see fr.dawan.cc_java_mongo.security.JwtAuthenticationFilter
+ * @see fr.dawan.cc_java_mongo.security.JwtService
  */
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * Configure le fournisseur d'authentification.
+     * <p>
+     * Utilise un {@link DaoAuthenticationProvider} qui charge les utilisateurs
+     * via le {@link UserDetailsService} et vérifie les mots de passe avec le
+     * {@link PasswordEncoder} configuré.
+     * </p>
+     *
+     * @param userDetailsService service de chargement des utilisateurs
+     * @param passwordEncoder encodeur de mot de passe
+     * @return le fournisseur d'authentification configuré
+     */
     @Bean
     public AuthenticationProvider authenticationProvider(
             UserDetailsService userDetailsService,
@@ -32,12 +56,33 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Expose le gestionnaire d'authentification Spring Security.
+     *
+     * @param configuration la configuration d'authentification Spring
+     * @return le gestionnaire d'authentification
+     * @throws Exception si la configuration échoue
+     */
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
+    /**
+     * Configure la chaîne de filtres de sécurité HTTP.
+     * <p>
+     * Configure CORS, désactive CSRF, utilise une politique de session stateless,
+     * définit les règles d'autorisation des requêtes et ajoute le filtre JWT
+     * avant le filtre d'authentification par nom d'utilisateur/mot de passe.
+     * </p>
+     *
+     * @param http la configuration HTTP de Spring Security
+     * @param jwtAuthenticationFilter le filtre d'authentification JWT
+     * @param authenticationProvider le fournisseur d'authentification
+     * @return la chaîne de filtres de sécurité configurée
+     * @throws Exception si la configuration échoue
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,

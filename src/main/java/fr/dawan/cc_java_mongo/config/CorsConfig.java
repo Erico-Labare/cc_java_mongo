@@ -9,11 +9,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * Configure les accès cross-origin à l'API REST.
+ * Configuration Spring pour la gestion des accès cross-origin (CORS).
+ * <p>
+ * Cette configuration autorise les requêtes provenant des origines front-end
+ * spécifiées (localhost sur les ports 3000, 4200 et 5173) avec les méthodes HTTP
+ * et en-têtes nécessaires pour le fonctionnement de l'API REST.
+ * </p>
  */
 @Configuration
 public class CorsConfig {
 
+    /**
+     * Configure la source de configuration CORS pour l'application.
+     * <p>
+     * Autorise les requêtes depuis localhost sur les ports de développement courants,
+     * avec les méthodes standards REST et les en-têtes d'authentification et de contenu.
+     * </p>
+     *
+     * @return la source de configuration CORS appliquée à tous les chemins ({@code /**})
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

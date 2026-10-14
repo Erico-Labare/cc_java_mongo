@@ -14,7 +14,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Expose les endpoints REST de gestion des médicaments.
+ * Contrôleur REST pour la gestion des médicaments.
+ * <p>
+ * Ce contrôleur expose les endpoints CRUD pour les médicaments :
+ * </p>
+ * <ul>
+ * <li>{@code GET /api/medicaments} - Liste de tous les médicaments</li>
+ * <li>{@code GET /api/medicaments/{code}} - Détails d'un médicament</li>
+ * <li>{@code POST /api/medicaments} - Création d'un médicament</li>
+ * <li>{@code PUT /api/medicaments/{code}} - Modification d'un médicament</li>
+ * <li>{@code DELETE /api/medicaments/{code}} - Suppression d'un médicament</li>
+ * </ul>
+ * <p>
+ * Tous les endpoints nécessitent une authentification JWT valide.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.service.MedicamentService
+ * @see fr.dawan.cc_java_mongo.dto.MedicamentRequest
+ * @see fr.dawan.cc_java_mongo.dto.MedicamentResponse
  */
 @RestController
 @RequestMapping("/api/medicaments")
@@ -22,6 +39,11 @@ public class MedicamentController {
 
     private final MedicamentService medicamentService;
 
+    /**
+     * Construit le contrôleur avec le service des médicaments.
+     *
+     * @param medicamentService le service métier des médicaments
+     */
     public MedicamentController(MedicamentService medicamentService) {
         this.medicamentService = medicamentService;
     }

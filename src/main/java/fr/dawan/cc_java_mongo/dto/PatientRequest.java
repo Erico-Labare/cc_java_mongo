@@ -6,7 +6,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Données reçues pour créer ou modifier un patient.
+ * DTO pour les données de création ou modification d'un patient.
+ * <p>
+ * Cette classe contient les données reçues du client pour créer ou modifier
+ * un patient. Les champs sont validés par les annotations Jakarta Validation.
+ * </p>
  */
 public class PatientRequest {
 

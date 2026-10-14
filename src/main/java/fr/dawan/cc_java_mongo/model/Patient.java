@@ -6,6 +6,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Représente un patient enregistré dans la base MongoDB.
+ * <p>
+ * Cette classe est mappée à la collection {@code patients} dans MongoDB.
+ * Le numéro de Sécurité sociale sert d'identifiant unique.
+ * </p>
+ *
+ * @see org.springframework.data.mongodb.core.mapping.Document
  */
 @Document(collection = "patients")
 public class Patient {
@@ -15,9 +21,18 @@ public class Patient {
 
     private String nom;
 
+    /**
+     * Constructeur par défaut requis par Spring Data MongoDB.
+     */
     public Patient() {
     }
 
+    /**
+     * Construit un patient avec son identifiant et son nom.
+     *
+     * @param numeroSecuriteSociale le numéro de Sécurité sociale (identifiant unique)
+     * @param nom le nom du patient
+     */
     public Patient(String numeroSecuriteSociale, String nom) {
         this.numeroSecuriteSociale = numeroSecuriteSociale;
         this.nom = nom;

@@ -15,7 +15,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Expose les endpoints REST de gestion des médecins.
+ * Contrôleur REST pour la gestion des médecins.
+ * <p>
+ * Ce contrôleur expose les endpoints CRUD pour les médecins :
+ * </p>
+ * <ul>
+ * <li>{@code GET /api/medecins} - Liste des médecins avec pagination et recherche</li>
+ * <li>{@code GET /api/medecins/{matricule}} - Détails d'un médecin</li>
+ * <li>{@code POST /api/medecins} - Création d'un médecin</li>
+ * <li>{@code PUT /api/medecins/{matricule}} - Modification d'un médecin</li>
+ * <li>{@code DELETE /api/medecins/{matricule}} - Suppression d'un médecin</li>
+ * </ul>
+ * <p>
+ * Tous les endpoints nécessitent une authentification JWT valide.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.service.MedecinService
+ * @see fr.dawan.cc_java_mongo.dto.MedecinRequest
+ * @see fr.dawan.cc_java_mongo.dto.MedecinResponse
  */
 @RestController
 @RequestMapping("/api/medecins")
@@ -23,6 +40,11 @@ public class MedecinController {
 
     private final MedecinService medecinService;
 
+    /**
+     * Construit le contrôleur avec le service des médecins.
+     *
+     * @param medecinService le service métier des médecins
+     */
     public MedecinController(MedecinService medecinService) {
         this.medecinService = medecinService;
     }

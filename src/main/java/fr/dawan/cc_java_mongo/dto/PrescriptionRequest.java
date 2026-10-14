@@ -5,7 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
 /**
- * Données reçues pour une prescription de médicament.
+ * DTO pour les données d'une prescription de médicament.
+ * <p>
+ * Cette classe contient les données d'une prescription incluse dans une
+ * consultation. Le nombre de prises doit être positif.
+ * </p>
  */
 public class PrescriptionRequest {
 

@@ -15,7 +15,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Expose les endpoints REST de gestion des patients.
+ * Contrôleur REST pour la gestion des patients.
+ * <p>
+ * Ce contrôleur expose les endpoints CRUD pour les patients :
+ * </p>
+ * <ul>
+ * <li>{@code GET /api/patients} - Liste des patients avec pagination et recherche</li>
+ * <li>{@code GET /api/patients/{numeroSecuriteSociale}} - Détails d'un patient</li>
+ * <li>{@code POST /api/patients} - Création d'un patient</li>
+ * <li>{@code PUT /api/patients/{numeroSecuriteSociale}} - Modification d'un patient</li>
+ * <li>{@code DELETE /api/patients/{numeroSecuriteSociale}} - Suppression d'un patient</li>
+ * </ul>
+ * <p>
+ * Tous les endpoints nécessitent une authentification JWT valide.
+ * </p>
+ *
+ * @see fr.dawan.cc_java_mongo.service.PatientService
+ * @see fr.dawan.cc_java_mongo.dto.PatientRequest
+ * @see fr.dawan.cc_java_mongo.dto.PatientResponse
  */
 @RestController
 @RequestMapping("/api/patients")
@@ -23,6 +40,11 @@ public class PatientController {
 
     private final PatientService patientService;
 
+    /**
+     * Construit le contrôleur avec le service des patients.
+     *
+     * @param patientService le service métier des patients
+     */
     public PatientController(PatientService patientService) {
         this.patientService = patientService;
     }

@@ -10,6 +10,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Représente une consultation médicale enregistrée dans MongoDB.
+ * <p>
+ * Cette classe est mappée à la collection {@code consultations} dans MongoDB.
+ * Une consultation associe un patient, un médecin, une date et des prescriptions.
+ * Elle peut également être liée à un document stocké dans GridFS.
+ * </p>
+ *
+ * @see org.springframework.data.mongodb.core.mapping.Document
+ * @see fr.dawan.cc_java_mongo.model.Prescription
  */
 @Document(collection = "consultations")
 public class Consultation {
@@ -27,9 +35,20 @@ public class Consultation {
 
     private String documentId;
 
+    /**
+     * Constructeur par défaut requis par Spring Data MongoDB.
+     */
     public Consultation() {
     }
 
+    /**
+     * Construit une consultation avec ses informations de base.
+     *
+     * @param numero le numéro unique de la consultation
+     * @param date la date et heure de la consultation
+     * @param patientId l'identifiant du patient (numéro de Sécurité sociale)
+     * @param medecinId l'identifiant du médecin (matricule)
+     */
     public Consultation(
             String numero,
             LocalDateTime date,
