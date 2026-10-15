@@ -1,0 +1,11 @@
+fr.dawan.cc_java_mongo
+fr.dawan.cc_java_mongo.config
+fr.dawan.cc_java_mongo.controller
+fr.dawan.cc_java_mongo.dto
+fr.dawan.cc_java_mongo.exception
+fr.dawan.cc_java_mongo.fixture
+fr.dawan.cc_java_mongo.model
+fr.dawan.cc_java_mongo.repository
+fr.dawan.cc_java_mongo.security
+fr.dawan.cc_java_mongo.service
+fr.dawan.fixture
