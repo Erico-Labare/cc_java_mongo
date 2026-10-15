@@ -2,11 +2,16 @@ package fr.dawan.cc_java_mongo.service;
 
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
 import fr.dawan.cc_java_mongo.model.Medecin;
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.repository.MedecinRepository;
+import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import fr.dawan.cc_java_mongo.security.SecurityUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -24,11 +29,24 @@ class MedecinServiceTest {
     @Mock
     private MedecinRepository medecinRepository;
 
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+
     private MedecinService medecinService;
+
+    private MockedStatic<SecurityUtils> securityUtilsMock;
 
     @BeforeEach
     void setUp() {
-        medecinService = new MedecinService(medecinRepository);
+        securityUtilsMock = org.mockito.Mockito.mockStatic(SecurityUtils.class);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository))
+                .thenReturn(Role.ADMIN);
+        medecinService = new MedecinService(medecinRepository, utilisateurRepository);
+    }
+
+    @AfterEach
+    void tearDown() {
+        securityUtilsMock.close();
     }
 
     @Test

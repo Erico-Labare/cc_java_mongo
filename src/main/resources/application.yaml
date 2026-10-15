@@ -33,12 +33,12 @@ info:
 
 app:
   jwt:
-    # Clé de développement : à remplacer par une clé secrète propre avant toute utilisation réelle.
+    # Aucune clé par défaut : JWT_SECRET doit être défini hors du dépôt.
     secret: ${JWT_SECRET:}
     expiration-ms: 3600000
   security:
     bootstrap-user:
       enabled: ${BOOTSTRAP_USER_ENABLED:false}
+      # Le mot de passe doit être fourni par variable d'environnement en production
       username: ${APP_ADMIN_USERNAME:admin}
       password: ${APP_ADMIN_PASSWORD:}
-

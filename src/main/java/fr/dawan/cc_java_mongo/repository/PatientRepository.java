@@ -19,6 +19,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface PatientRepository
         extends MongoRepository<Patient, String> {
 
+    java.util.List<Patient> findByMedecinId(String medecinId);
+
     /**
      * Recherche les patients dont le nom contient le texte fourni,
      * sans tenir compte de la casse.

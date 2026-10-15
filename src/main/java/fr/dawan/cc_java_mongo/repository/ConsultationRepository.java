@@ -32,6 +32,13 @@ public interface ConsultationRepository
             String patientId,
             Pageable pageable);
 
+    Page<Consultation> findByMedecinId(String medecinId, Pageable pageable);
+
+    Page<Consultation> findByPatientIdAndMedecinId(
+            String patientId, String medecinId, Pageable pageable);
+
+    boolean existsByPatientIdAndMedecinId(String patientId, String medecinId);
+
     /**
      * Recherche les consultations dont la date est postérieure
      * à la date fournie, avec pagination.

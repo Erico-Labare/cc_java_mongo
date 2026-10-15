@@ -3,10 +3,14 @@ package fr.dawan.cc_java_mongo.service;
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
 import fr.dawan.cc_java_mongo.model.Medicament;
 import fr.dawan.cc_java_mongo.repository.MedicamentRepository;
+import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import fr.dawan.cc_java_mongo.model.Role;
+import fr.dawan.cc_java_mongo.security.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -18,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class MedicamentServiceTest {
@@ -25,11 +30,33 @@ class MedicamentServiceTest {
     @Mock
     private MedicamentRepository medicamentRepository;
 
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+
+    private MockedStatic<SecurityUtils> securityUtils;
+
     private MedicamentService medicamentService;
 
     @BeforeEach
     void setUp() {
-        medicamentService = new MedicamentService(medicamentRepository);
+        securityUtils = mockStatic(SecurityUtils.class);
+        securityUtils.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.ADMIN);
+        medicamentService = new MedicamentService(medicamentRepository, utilisateurRepository);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() { securityUtils.close(); }
+
+    @Test
+    void patientCannotMutateMedicationCatalogThroughService() {
+        securityUtils.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.PATIENT);
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> medicamentService.createMedicament(new Medicament("NEW", "New")));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> medicamentService.updateMedicament("OLD", new Medicament("OLD", "Changed")));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> medicamentService.deleteMedicament("OLD"));
+        verifyNoInteractions(medicamentRepository);
     }
 
     @Test

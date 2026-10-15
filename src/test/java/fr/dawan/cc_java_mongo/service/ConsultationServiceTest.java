@@ -3,14 +3,19 @@ package fr.dawan.cc_java_mongo.service;
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
 import fr.dawan.cc_java_mongo.model.Consultation;
 import fr.dawan.cc_java_mongo.model.Prescription;
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.repository.ConsultationRepository;
 import fr.dawan.cc_java_mongo.repository.MedecinRepository;
 import fr.dawan.cc_java_mongo.repository.MedicamentRepository;
 import fr.dawan.cc_java_mongo.repository.PatientRepository;
+import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import fr.dawan.cc_java_mongo.security.SecurityUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -28,9 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-
-import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,16 +52,30 @@ class ConsultationServiceTest {
     @Mock
     private MedicamentRepository medicamentRepository;
 
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+
     private ConsultationService consultationService;
+
+    private MockedStatic<SecurityUtils> securityUtilsMock;
 
     @BeforeEach
     void setUp() {
+        securityUtilsMock = org.mockito.Mockito.mockStatic(SecurityUtils.class);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository))
+                .thenReturn(Role.ADMIN);
         consultationService = new ConsultationService(
                 consultationRepository,
                 patientRepository,
                 medecinRepository,
-                medicamentRepository
+                medicamentRepository,
+                utilisateurRepository
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        securityUtilsMock.close();
     }
 
     @Test
@@ -88,6 +104,85 @@ class ConsultationServiceTest {
         verify(patientRepository).existsById("PAT001");
         verify(medecinRepository).existsById("MED001");
         verify(medicamentRepository).existsById("MEDIC001");
+        verify(consultationRepository).save(consultation);
+    }
+
+    @Test
+    void patientCannotMutateConsultationOrPrescriptionsThroughService() {
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.PATIENT);
+        var update = createValidConsultation();
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.updateConsultation("CONS001", update));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.deleteConsultation("CONS001"));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.updatePrescriptions("CONS001", List.of()));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.createConsultation(update));
+        verifyNoInteractions(consultationRepository, patientRepository, medecinRepository, medicamentRepository);
+    }
+
+    @Test
+    void doctorCannotReassignConsultationThroughService() {
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.MEDECIN);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentMedecinId(utilisateurRepository)).thenReturn("MED001");
+        var existing = createValidConsultation();
+        var update = createValidConsultation();
+        update.setPatientId("PAT002");
+        when(consultationRepository.findById("CONS001")).thenReturn(Optional.of(existing));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.updateConsultation("CONS001", update));
+        assertEquals("PAT001", existing.getPatientId());
+        verify(consultationRepository, never()).save(any());
+    }
+
+    @Test
+    void doctorCanUpdateConsultationWithoutChangingItsReferences() {
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.MEDECIN);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentMedecinId(utilisateurRepository)).thenReturn("MED001");
+        var existing = createValidConsultation();
+        var update = createValidConsultation();
+        update.setDate(LocalDateTime.now().plusDays(8));
+        when(consultationRepository.findById("CONS001")).thenReturn(Optional.of(existing));
+        when(patientRepository.existsById("PAT001")).thenReturn(true);
+        when(medecinRepository.existsById("MED001")).thenReturn(true);
+        when(medicamentRepository.existsById("MEDIC001")).thenReturn(true);
+        when(consultationRepository.save(existing)).thenReturn(existing);
+        assertSame(existing, consultationService.updateConsultation("CONS001", update));
+        assertEquals("PAT001", existing.getPatientId());
+        assertEquals("MED001", existing.getMedecinId());
+        verify(consultationRepository).save(existing);
+    }
+
+    @Test
+    void doctorCannotCreateConsultationForPatientNotLinkedToDoctor() {
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.MEDECIN);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentMedecinId(utilisateurRepository)).thenReturn("MED001");
+        var consultation = createValidConsultation();
+        when(consultationRepository.existsById("CONS001")).thenReturn(false);
+        when(patientRepository.existsById("PAT001")).thenReturn(true);
+        when(medecinRepository.existsById("MED001")).thenReturn(true);
+        when(medicamentRepository.existsById("MEDIC001")).thenReturn(true);
+        when(patientRepository.findById("PAT001")).thenReturn(Optional.of(new fr.dawan.cc_java_mongo.model.Patient("PAT001", "Patient")));
+        assertThrows(fr.dawan.cc_java_mongo.exception.AccessDeniedException.class,
+                () -> consultationService.createConsultation(consultation));
+        verify(consultationRepository, never()).save(any());
+    }
+
+    @Test
+    void doctorCanCreateConsultationForLinkedPatient() {
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentRole(utilisateurRepository)).thenReturn(Role.MEDECIN);
+        securityUtilsMock.when(() -> SecurityUtils.getCurrentMedecinId(utilisateurRepository)).thenReturn("MED001");
+        var consultation = createValidConsultation();
+        var patient = new fr.dawan.cc_java_mongo.model.Patient("PAT001", "Patient");
+        patient.setMedecinId("MED001");
+        when(consultationRepository.existsById("CONS001")).thenReturn(false);
+        when(patientRepository.existsById("PAT001")).thenReturn(true);
+        when(medecinRepository.existsById("MED001")).thenReturn(true);
+        when(medicamentRepository.existsById("MEDIC001")).thenReturn(true);
+        when(patientRepository.findById("PAT001")).thenReturn(Optional.of(patient));
+        when(consultationRepository.save(consultation)).thenReturn(consultation);
+        assertSame(consultation, consultationService.createConsultation(consultation));
         verify(consultationRepository).save(consultation);
     }
 

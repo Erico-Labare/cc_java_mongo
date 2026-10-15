@@ -20,6 +20,7 @@ public class Patient {
     private String numeroSecuriteSociale;
 
     private String nom;
+    private String medecinId;
 
     /**
      * Constructeur par défaut requis par Spring Data MongoDB.
@@ -53,5 +54,9 @@ public class Patient {
     public void setNom(String nom) {
         this.nom = nom;
     }
+
+    public String getMedecinId() { return medecinId; }
+
+    public void setMedecinId(String medecinId) { this.medecinId = medecinId; }
 }
 

@@ -24,8 +24,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * <li>Protection CSRF désactivée (API stateless)</li>
  * <li>Sessions HTTP désactivées (authentification par token uniquement)</li>
  * <li>Endpoints publics : authentification, health check, documentation Swagger</li>
+ * <li>Endpoints d'administration réservés au rôle ADMIN</li>
  * <li>Tous les autres endpoints nécessitent une authentification JWT valide</li>
  * </ul>
+ * <p>
+ * <strong>Note importante :</strong> Les contrôles d'accès basés sur l'identité
+ * de l'utilisateur (ex: un patient ne peut voir que son propre dossier) sont
+ * implémentés au niveau des services métier, pas uniquement dans cette configuration.
+ * </p>
  *
  * @see fr.dawan.cc_java_mongo.security.JwtAuthenticationFilter
  * @see fr.dawan.cc_java_mongo.security.JwtService
@@ -76,6 +82,11 @@ public class SecurityConfig {
      * définit les règles d'autorisation des requêtes et ajoute le filtre JWT
      * avant le filtre d'authentification par nom d'utilisateur/mot de passe.
      * </p>
+     * <p>
+     * Les endpoints d'administration (gestion des utilisateurs) sont réservés
+     * au rôle ADMIN. Les autres endpoints métier nécessitent une authentification
+     * mais les contrôles d'accès basés sur l'identité sont effectués dans les services.
+     * </p>
      *
      * @param http la configuration HTTP de Spring Security
      * @param jwtAuthenticationFilter le filtre d'authentification JWT
@@ -102,6 +113,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, exception) ->
+                                response.sendError(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/auth/**",
@@ -110,6 +126,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        // Les endpoints d'administration sont réservés au rôle ADMIN
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Tous les autres endpoints nécessitent une authentification
+                        // Les contrôles d'accès basés sur l'identité sont dans les services
                         .anyRequest().authenticated())
                 .addFilterBefore(
                         jwtAuthenticationFilter,

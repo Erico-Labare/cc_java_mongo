@@ -1,6 +1,7 @@
 package fr.dawan.cc_java_mongo.security;
 
 import fr.dawan.cc_java_mongo.dto.LoginRequest;
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.model.Utilisateur;
 import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -20,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(properties = {
+        "spring.data.mongodb.uri=mongodb://localhost:27017/cc_java_mongo_jwt_test",
         "app.jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm"
 })
 @AutoConfigureMockMvc
@@ -50,7 +52,7 @@ class JwtSecurityTest {
                 null,
                 TEST_USERNAME,
                 passwordEncoder.encode(TEST_PASSWORD),
-                "USER"
+                Role.PATIENT
         );
 
         utilisateurRepository.save(utilisateur);
@@ -94,31 +96,31 @@ class JwtSecurityTest {
     }
 
     @Test
-    void accessProtectedEndpointWithoutTokenShouldReturn403() throws Exception {
+    void accessProtectedEndpointWithoutTokenShouldReturn401() throws Exception {
         mockMvc.perform(get("/api/patients"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void accessProtectedEndpointWithInvalidTokenShouldReturn403() throws Exception {
+    void accessProtectedEndpointWithInvalidTokenShouldReturn401() throws Exception {
         mockMvc.perform(get("/api/patients")
                         .header("Authorization", "Bearer invalid.token.here"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void accessProtectedEndpointWithMalformedTokenShouldReturn403() throws Exception {
+    void accessProtectedEndpointWithMalformedTokenShouldReturn401() throws Exception {
         mockMvc.perform(get("/api/patients")
                         .header("Authorization", "InvalidFormat"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void accessProtectedEndpointWithWrongPrefixShouldReturn403() throws Exception {
+    void accessProtectedEndpointWithWrongPrefixShouldReturn401() throws Exception {
         String token = obtainValidToken();
         mockMvc.perform(get("/api/patients")
                         .header("Authorization", "Basic " + token))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

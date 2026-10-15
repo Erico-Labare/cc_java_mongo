@@ -33,8 +33,7 @@
 - [20. Dépannage](#20-dépannage)
 - [21. Bonnes pratiques et limites](#21-bonnes-pratiques-et-limites)
 - [22. Dette technique](#22-dette-technique)
-- [23. État du projet](#23-état-du-projet)
-- [24. Licence et contribution](#24-licence-et-contribution)
+- [23. Licence et contribution](#23-licence-et-contribution)
 
 ## 1. Présentation du projet
 
@@ -713,7 +712,7 @@ Pour exécuter la suite complète et vérifier également la construction du pro
 .\mvnw.cmd clean verify
 ```
 
-Les tests du projet comprennent 12 classes de test :
+Les tests du projet comprennent 13 classes de test :
 
 - `CcJavaMongoApplicationTests` : test du contexte Spring Boot.
 - `PatientServiceTest` : tests du service patient.
@@ -727,8 +726,9 @@ Les tests du projet comprennent 12 classes de test :
 - `DocumentControllerTest` : tests du contrôleur document.
 - `AuthControllerTest` : tests du contrôleur d'authentification.
 - `JwtSecurityTest` : tests de sécurité JWT.
+- `RoleBasedSecurityTest` : tests HTTP avec authentification simulée pour les règles de rôles et l'isolation des dossiers.
 
-Le nombre exact de tests doit être obtenu en exécutant `mvnw.cmd test` ou `mvnw.cmd clean verify`. Les tests unitaires des services utilisent Mockito pour isoler la logique métier de ses dépendances. Les tests de contrôleurs et de sécurité valident les endpoints et la configuration Spring Security.
+Les trois tests `@SpringBootTest` déclarent chacun une base MongoDB dédiée : `cc_java_mongo_context_test`, `cc_java_mongo_jwt_test` et `cc_java_mongo_roles_test`. Les tests unitaires des services utilisent Mockito pour isoler la logique métier de ses dépendances. `RoleBasedSecurityTest` utilise `@WithMockUser`; `JwtSecurityTest` exerce le filtre JWT réel.
 
 ## 14. Analyse de la couverture avec JaCoCo
 
@@ -1028,18 +1028,18 @@ Cette section recense les limites identifiées et les points d'amélioration pos
 
 ### 22.1. Limites actuelles
 
-- **Absence de rôles et d'autorisations granulaires** : tous les utilisateurs authentifiés ont les mêmes droits. Aucune distinction par rôle (admin, médecin, secrétaire) n'est implémentée.
+- **Droits cliniques de `ADMIN` à confirmer** : `ADMIN` conserve les droits cliniques déjà implémentés. Cette passe ne modifie pas cette politique métier. Les patients ne peuvent pas muter consultations/prescriptions; le médecin ne peut créer que pour un patient dont `Patient.medecinId` lui correspond et ne peut pas réaffecter une consultation.
 - **Bootstrap utilisateur** : le mécanisme de création du compte initial est conçu pour le développement. Il devrait être désactivé ou remplacé par une procédure adaptée en production.
-- **Pas de tests d'intégration** : les tests actuels sont des tests unitaires de services et de contrôleurs avec mocks. Aucun test d'intégration avec une base MongoDB réelle n'est présent.
-- **Couverture de tests non mesurée** : le rapport JaCoCo existe mais le pourcentage de couverture n'est pas documenté et doit être vérifié après chaque modification.
-- **Pas de validation des rôles dans les endpoints** : la configuration Spring Security protège les endpoints par authentification, mais ne vérifie pas les rôles pour autoriser ou refuser des opérations spécifiques.
-- **Gestion des documents GridFS** : le comportement exact en cas de remplacement d'un fichier existant n'est pas explicitement documenté dans le code et doit être vérifié.
+- **Tests d'intégration limités** : deux tests HTTP `@SpringBootTest` utilisent MongoDB réel sur des bases nommées pour les tests; un troisième test charge le contexte. Les scénarios GridFS ne sont pas testés de bout en bout.
+- **Couverture partielle** : consulter les valeurs JaCoCo produites par `mvn clean verify`; elles ne mesurent pas la qualité fonctionnelle de chaque scénario.
+- **Autorisations au niveau service** : les mutations du catalogue médicaments sont réservées à `ADMIN`; les consultations sont mutables par `MEDECIN` et `ADMIN`, jamais par `PATIENT`. Les contrôles métier s’appliquent aussi aux appels directs des services.
+- **Gestion des documents GridFS** : le service vérifie le nom non vide et l'accès, mais n'applique pas de limite de taille ou de type MIME. Il supprime l'ancien fichier avant d'avoir stocké le nouveau.
 - **Pas de pagination sur les médicaments** : contrairement aux patients et médecins, l'endpoint des médicaments ne propose pas de pagination.
 
 ### 22.2. Améliorations possibles
 
-- **Implémenter des rôles et des autorisations** : ajouter des rôles (ADMIN, MEDECIN, SECRETAIRE) et utiliser `@PreAuthorize` ou des règles de sécurité pour restreindre l'accès aux endpoints.
-- **Ajouter des tests d'intégration** : créer des tests avec `@SpringBootTest` et une base MongoDB de test pour valider le comportement complet de l'application.
+- **Compléter les autorisations par ressource** : clarifier les droits de mutation patient/consultation et le rôle clinique de l'administrateur, puis couvrir les choix par tests.
+- **Ajouter des tests GridFS** : vérifier les refus d'accès, la validation des fichiers et le remplacement sur la base de test.
 - **Améliorer la couverture de tests** : identifier les classes et méthodes non couvertes et ajouter des tests pour atteindre un pourcentage de couverture plus élevé.
 - **Ajouter des tests de repository** : tester les requêtes MongoDB personnalisées si elles sont ajoutées.
 - **Implémenter le rafraîchissement des tokens JWT** : ajouter un mécanisme de refresh token pour améliorer la sécurité et l'expérience utilisateur.
@@ -1049,28 +1049,8 @@ Cette section recense les limites identifiées et les points d'amélioration pos
 - **Ajouter des contraintes d'unicité** : vérifier que les identifiants métier (numéro de sécurité sociale, matricule, code médicament) sont uniques dans la base.
 - **Documenter les codes d'erreur** : créer une liste exhaustive des codes HTTP renvoyés par `GlobalExceptionHandler` avec leurs causes et leurs solutions.
 
-### 22.3. Points à confirmer
 
-- **Couverture de tests actuelle** : exécuter `mvnw.cmd clean verify` et consulter le rapport JaCoCo pour obtenir le pourcentage réel de couverture.
-- **Indicateurs SonarQube** : si SonarQube est utilisé, vérifier les notes de fiabilité, maintenabilité, sécurité et couverture actuelles.
-- **Comportement de remplacement des documents** : vérifier dans `DocumentService` si un fichier existant est remplacé ou si une erreur est renvoyée.
-
-## 23. État du projet
-
-À la dernière vérification effectuée pendant le développement :
-
-- L'application Spring Boot démarre.
-- MongoDB est utilisé comme base de données.
-- La connexion JWT a été testée avec succès.
-- Les endpoints protégés ont été testés avec un jeton valide.
-- Swagger UI est accessible.
-- Les tests automatisés sont présents (12 classes de test). Le nombre exact de tests doit être confirmé en exécutant `mvnw.cmd test`.
-- L'analyse SonarQube se termine par `BUILD SUCCESS` (si le plugin sonar-maven-plugin est utilisé manuellement).
-- Des améliorations restent possibles sur la couverture des tests et sur certains problèmes de sécurité ou de maintenabilité.
-
-Ces résultats décrivent l'état constaté pendant le développement et devront être actualisés après les prochaines évolutions. Pour obtenir les indicateurs actuels (nombre de tests, couverture JaCoCo, notes SonarQube), exécuter les commandes correspondantes et consulter les rapports générés.
-
-## 24. Licence et contribution
+## 23. Licence et contribution
 
 Aucune licence spécifique n'est définie dans cette documentation. Ajouter un fichier de licence si le projet doit être distribué selon des conditions particulières.
 

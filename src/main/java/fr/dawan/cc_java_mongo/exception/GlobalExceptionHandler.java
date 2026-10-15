@@ -37,6 +37,12 @@ public class GlobalExceptionHandler {
 
     private final Clock clock = Clock.systemDefaultZone();
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException exception) {
+        return buildResponse(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
+
     /**
      * Gère les exceptions de ressource non trouvée.
      *

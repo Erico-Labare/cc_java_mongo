@@ -1,5 +1,6 @@
 package fr.dawan.cc_java_mongo.service;
 
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.model.Utilisateur;
 import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
 import org.springframework.security.core.userdetails.User;
@@ -15,9 +16,14 @@ import org.springframework.stereotype.Service;
  * d'authentification d'un utilisateur à partir de la base MongoDB et les convertit
  * en un objet {@link UserDetails} compatible avec Spring Security.
  * </p>
+ * <p>
+ * Le rôle de l'utilisateur est extrait de l'énumération {@link Role} et converti
+ * en autorité Spring Security avec le préfixe ROLE_.
+ * </p>
  *
  * @see org.springframework.security.core.userdetails.UserDetailsService
  * @see fr.dawan.cc_java_mongo.model.Utilisateur
+ * @see fr.dawan.cc_java_mongo.model.Role
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -37,9 +43,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     /**
      * Charge les détails de l'utilisateur par son nom d'utilisateur.
      * <p>
-     * Recherche l'utilisateur dans MongoDB, normalise son rôle (supprime le préfixe
-     * ROLE_ s'il est présent, applique USER par défaut si vide) et construit
-     * un objet UserDetails Spring Security.
+     * Recherche l'utilisateur dans MongoDB, extrait son rôle depuis l'énumération
+     * {@link Role} et construit un objet UserDetails Spring Security.
+     * Si le rôle est null, le rôle PATIENT est appliqué par défaut.
      * </p>
      *
      * @param username le nom d'utilisateur recherché
@@ -55,20 +61,15 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Utilisateur introuvable : " + username));
 
-        String role = utilisateur.getRole();
+        Role role = utilisateur.getRole();
 
-        if (role == null || role.isBlank()) {
-            role = "USER";
-        }
-
-        // La méthode roles() ajoute automatiquement le préfixe ROLE_.
-        if (role.startsWith("ROLE_")) {
-            role = role.substring(5);
+        if (role == null) {
+            role = Role.PATIENT;
         }
 
         return User.withUsername(utilisateur.getUsername())
                 .password(utilisateur.getPassword())
-                .roles(role)
+                .roles(role.name())
                 .build();
     }
 }

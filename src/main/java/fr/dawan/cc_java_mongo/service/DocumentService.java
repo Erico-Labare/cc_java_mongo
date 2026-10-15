@@ -3,8 +3,12 @@ package fr.dawan.cc_java_mongo.service;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
+import fr.dawan.cc_java_mongo.exception.AccessDeniedException;
 import fr.dawan.cc_java_mongo.model.Consultation;
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.repository.ConsultationRepository;
+import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import fr.dawan.cc_java_mongo.security.SecurityUtils;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -27,6 +31,14 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * de taille importante. Il remplace automatiquement un document existant
  * si un nouveau est uploadé pour la même consultation.
  * </p>
+ * <p>
+ * <strong>Contrôles d'accès :</strong>
+ * <ul>
+ * <li>PATIENT : ne peut télécharger que les documents de ses consultations</li>
+ * <li>MEDECIN : peut télécharger tous les documents</li>
+ * <li>ADMIN : peut télécharger tous les documents</li>
+ * </ul>
+ * </p>
  *
  * @see org.springframework.data.mongodb.gridfs.GridFsTemplate
  * @see fr.dawan.cc_java_mongo.model.Consultation
@@ -36,18 +48,22 @@ public class DocumentService {
 
     private final GridFsTemplate gridFsTemplate;
     private final ConsultationRepository consultationRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
     /**
      * Construit le service avec le template GridFS et le repository des consultations.
      *
      * @param gridFsTemplate le template pour les opérations GridFS
      * @param consultationRepository le repository des consultations
+     * @param utilisateurRepository le repository des utilisateurs
      */
     public DocumentService(
             GridFsTemplate gridFsTemplate,
-            ConsultationRepository consultationRepository) {
+            ConsultationRepository consultationRepository,
+            UtilisateurRepository utilisateurRepository) {
         this.gridFsTemplate = gridFsTemplate;
         this.consultationRepository = consultationRepository;
+        this.utilisateurRepository = utilisateurRepository;
     }
 
     /**
@@ -59,6 +75,17 @@ public class DocumentService {
         Consultation consultation = consultationRepository.findById(numero)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Consultation introuvable : " + numero));
+
+        Role role = SecurityUtils.getCurrentRole(utilisateurRepository);
+        if (role == Role.PATIENT) {
+            throw new AccessDeniedException("Un patient ne peut pas déposer un document de consultation.");
+        }
+        if (role == Role.MEDECIN) {
+            String medecinId = SecurityUtils.getCurrentMedecinId(utilisateurRepository);
+            if (medecinId == null || !medecinId.equals(consultation.getMedecinId())) {
+                throw new AccessDeniedException("Dépôt de document non autorisé pour cette consultation.");
+            }
+        }
 
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException(
@@ -97,11 +124,42 @@ public class DocumentService {
 
     /**
      * Récupère le document associé à une consultation.
+     * <p>
+     * L'accès est contrôlé selon le rôle de l'utilisateur :
+     * <ul>
+     * <li>PATIENT : ne peut télécharger que les documents de ses consultations</li>
+     * <li>MEDECIN : peut télécharger tous les documents</li>
+     * <li>ADMIN : peut télécharger tous les documents</li>
+     * </ul>
+     * </p>
+     *
+     * @param numero le numéro de la consultation
+     * @return la ressource GridFS contenant le document
+     * @throws ResourceNotFoundException si la consultation ou le document n'existe pas
+     * @throws IllegalStateException si l'utilisateur n'a pas les droits d'accès
      */
     public GridFsResource downloadDocument(String numero) {
         Consultation consultation = consultationRepository.findById(numero)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Consultation introuvable : " + numero));
+
+        // Vérification des droits d'accès
+        Role role = SecurityUtils.getCurrentRole(utilisateurRepository);
+
+        if (role == Role.PATIENT) {
+            String patientId = SecurityUtils.getCurrentPatientId(utilisateurRepository);
+            if (patientId == null || !patientId.equals(consultation.getPatientId())) {
+                throw new AccessDeniedException(
+                        "Un patient ne peut accéder qu'aux documents de ses propres consultations.");
+            }
+        }
+
+        if (role == Role.MEDECIN) {
+            String medecinId = SecurityUtils.getCurrentMedecinId(utilisateurRepository);
+            if (medecinId == null || !medecinId.equals(consultation.getMedecinId())) {
+                throw new AccessDeniedException("Téléchargement non autorisé pour cette consultation.");
+            }
+        }
 
         if (consultation.getDocumentId() == null) {
             throw new ResourceNotFoundException(

@@ -2,7 +2,11 @@ package fr.dawan.cc_java_mongo.service;
 
 import fr.dawan.cc_java_mongo.exception.ResourceNotFoundException;
 import fr.dawan.cc_java_mongo.model.Medicament;
+import fr.dawan.cc_java_mongo.model.Role;
 import fr.dawan.cc_java_mongo.repository.MedicamentRepository;
+import fr.dawan.cc_java_mongo.repository.UtilisateurRepository;
+import fr.dawan.cc_java_mongo.security.SecurityUtils;
+import fr.dawan.cc_java_mongo.exception.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,14 +26,17 @@ import java.util.List;
 public class MedicamentService {
 
     private final MedicamentRepository medicamentRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
     /**
      * Construit le service avec le repository des médicaments.
      *
      * @param medicamentRepository le repository pour accéder aux médicaments
      */
-    public MedicamentService(MedicamentRepository medicamentRepository) {
+    public MedicamentService(MedicamentRepository medicamentRepository,
+            UtilisateurRepository utilisateurRepository) {
         this.medicamentRepository = medicamentRepository;
+        this.utilisateurRepository = utilisateurRepository;
     }
 
     /**
@@ -61,6 +68,7 @@ public class MedicamentService {
      * @return médicament enregistré
      */
     public Medicament createMedicament(Medicament medicament) {
+        requireAdmin();
         if (medicament.getCode() == null
                 || medicament.getCode().isBlank()) {
             throw new IllegalArgumentException(
@@ -85,6 +93,7 @@ public class MedicamentService {
      * @return médicament mis à jour
      */
     public Medicament updateMedicament(String code, Medicament medicament) {
+        requireAdmin();
         Medicament existingMedicament = getMedicamentById(code);
 
         existingMedicament.setLibelle(medicament.getLibelle());
@@ -98,7 +107,14 @@ public class MedicamentService {
      * @param code identifiant du médicament
      */
     public void deleteMedicament(String code) {
+        requireAdmin();
         Medicament medicament = getMedicamentById(code);
         medicamentRepository.delete(medicament);
+    }
+
+    private void requireAdmin() {
+        if (SecurityUtils.getCurrentRole(utilisateurRepository) != Role.ADMIN) {
+            throw new AccessDeniedException("Seul un administrateur peut modifier le catalogue des médicaments.");
+        }
     }
 }
