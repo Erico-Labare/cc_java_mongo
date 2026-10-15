@@ -38,7 +38,6 @@ import java.time.Clock;
  * <li>MEDECIN : peut voir toutes les consultations</li>
  * <li>ADMIN : peut voir toutes les consultations</li>
  * </ul>
- * </p>
  *
  * @see fr.dawan.cc_java_mongo.model.Consultation
  * @see fr.dawan.cc_java_mongo.repository.ConsultationRepository
@@ -85,7 +84,6 @@ public class ConsultationService {
      * <li>MEDECIN : retourne toutes les consultations</li>
      * <li>ADMIN : retourne toutes les consultations</li>
      * </ul>
-     * </p>
      *
      * @param pageable paramètres de pagination et de tri
      * @return page de consultations filtrée selon les droits
@@ -119,7 +117,6 @@ public class ConsultationService {
      * <li>MEDECIN : peut accéder à toutes les consultations</li>
      * <li>ADMIN : peut accéder à toutes les consultations</li>
      * </ul>
-     * </p>
      *
      * @param patientId identifiant du patient
      * @param pageable paramètres de pagination et de tri
@@ -169,7 +166,6 @@ public class ConsultationService {
      * <li>MEDECIN : peut accéder à toutes les consultations</li>
      * <li>ADMIN : peut accéder à toutes les consultations</li>
      * </ul>
-     * </p>
      *
      * @param numero le numéro de la consultation
      * @return la consultation trouvée

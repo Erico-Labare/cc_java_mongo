@@ -38,7 +38,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * <li>MEDECIN : peut télécharger tous les documents</li>
  * <li>ADMIN : peut télécharger tous les documents</li>
  * </ul>
- * </p>
  *
  * @see org.springframework.data.mongodb.gridfs.GridFsTemplate
  * @see fr.dawan.cc_java_mongo.model.Consultation
@@ -131,7 +130,6 @@ public class DocumentService {
      * <li>MEDECIN : peut télécharger tous les documents</li>
      * <li>ADMIN : peut télécharger tous les documents</li>
      * </ul>
-     * </p>
      *
      * @param numero le numéro de la consultation
      * @return la ressource GridFS contenant le document

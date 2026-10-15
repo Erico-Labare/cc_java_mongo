@@ -9,7 +9,6 @@ package fr.dawan.cc_java_mongo.model;
  * <li>{@link #MEDECIN} - Médecin, peut gérer les consultations et documents</li>
  * <li>{@link #ADMIN} - Administrateur, peut gérer les comptes utilisateurs</li>
  * </ul>
- * </p>
  */
 public enum Role {
 

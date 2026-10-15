@@ -1,0 +1,6 @@
+spring:
+  main:
+    web-application-type: none
+  data:
+    mongodb:
+      auto-index-creation: false

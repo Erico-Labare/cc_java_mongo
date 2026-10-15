@@ -10,6 +10,7 @@
     - [Vérifier MongoDB](#vérifier-mongodb)
 - [4. Récupération du projet](#4-récupération-du-projet)
 - [5. Configuration de MongoDB](#5-configuration-de-mongodb)
+    - [Fixture de démonstration MongoDB](#54-fixture-de-démonstration-mongodb)
 - [6. Configuration des variables d'environnement](#6-configuration-des-variables-denvironnement)
 - [7. Lancer l'application](#7-lancer-lapplication)
 - [8. Vérifier que l'application fonctionne](#8-vérifier-que-lapplication-fonctionne)
@@ -205,6 +206,29 @@ Le projet ne doit pas être considéré comme livré avec un jeu de données mé
 
 Pour tester les fonctionnalités, il est possible de créer les patients, médecins et médicaments via les endpoints REST, puis de créer des consultations en référençant les identifiants existants.
 
+### 5.4. Fixture de démonstration MongoDB
+
+Le fixture est désactivé au démarrage normal. Il utilise un contexte Spring réduit, sans serveur HTTP ni JWT, et encode les mots de passe avec le BCrypt du projet. Il crée 1 compte ADMIN, 3 comptes MEDECIN, 6 comptes PATIENT, 8 médicaments et 6 consultations avec prescriptions fictives. Tous les noms et dossiers sont inventés ; les clés patient `DEMO-PAT-001` à `DEMO-PAT-006` sont des identifiants synthétiques et ne sont pas des numéros de Sécurité sociale. Le nombre `nbPrises` représente le champ du modèle et ne constitue pas une posologie médicale.
+
+| Rôle | Identifiants de démonstration |
+|---|---|
+| ADMIN | `admin.demo` |
+| MEDECIN | `claire.moreau`, `thomas.bernard`, `nadia.petit` |
+| PATIENT | `emma.lefevre`, `lucas.dubois`, `ines.garnier`, `hugo.fontaine`, `manon.chevalier`, `antoine.leroy` |
+
+Le mot de passe commun reste `DemoOnly-2026!`. Ces comptes sont réservés à la démonstration locale. Le catalogue comprend du paracétamol, de l’ibuprofène, de l’amoxicilline, de la cétirizine, de l’oméprazole, du salbutamol, de la metformine et de l’atorvastatine.
+
+Prérequis : JDK 21, MongoDB accessible, et PowerShell avec `mvnw.cmd` disponible dans le dépôt. Depuis n’importe quel répertoire, lancez :
+
+```powershell
+.\scripts\reset-demo-fixture.ps1
+```
+
+Par défaut, le script cible `mongodb://localhost:27017/medicaldb`. Pour choisir une autre instance de cette même base, définissez `MONGODB_URI` dans la session PowerShell avant de lancer le script. Le script vérifie le nom de base, affiche les cinq collections qui seront remplacées (`patients`, `medecins`, `medicaments`, `consultations`, `utilisateurs`), puis exige une seule saisie exacte `RESET_DEMO_DATA` avant d’exécuter Maven et le runner Java. Il transmet cette confirmation au processus Java ; un lancement Java direct, sans le script, demande lui-même la confirmation exacte sur la console. Le runner Java valide à nouveau la base effective via Spring.
+
+Le reset efface et recrée les données métier de ces collections. Les collections GridFS `fs.files` et `fs.chunks` sont préservées ; leurs fichiers existants peuvent devenir orphelins si leurs consultations sont remplacées. Le reset n’est pas transactionnel. Le runner supprime d’abord, l’une après l’autre, les cinq collections, puis insère les médecins, patients, médicaments, consultations et enfin les comptes. Une panne pendant la suppression peut laisser certaines collections vidées et les autres intactes ; une panne pendant le remplissage peut laisser les collections vidées ou un sous-ensemble des groupes de données déjà inséré. Le script affiche séparément `stdout` et `stderr` complets de Java et retourne son code d’échec ; le runner journalise la cause et la stack trace en masquant les identifiants des URI MongoDB. Vérifiez les logs et l’état des collections en lecture seule avant toute nouvelle tentative.
+
+Si la politique PowerShell bloque le script, lancez-le ponctuellement avec `powershell.exe -ExecutionPolicy Bypass -File .\scripts\reset-demo-fixture.ps1` (ou l’équivalent `pwsh`). Cette option ne change pas la politique enregistrée.
 ## 6. Configuration des variables d'environnement
 
 La configuration de l'application utilise des variables d'environnement afin de ne pas inscrire les secrets dans le code source.

@@ -53,3 +53,6 @@ build/
 hs_err_pid*
 replay_pid*
 /.env.local
+
+# Javadoc HTML explicitly shared in the repository
+!docs/apidocs/

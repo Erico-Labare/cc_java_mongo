@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
  * <li>Un médecin peut voir tous les patients (pour son activité)</li>
  * <li>Un administrateur peut voir tous les patients</li>
  * </ul>
- * </p>
  *
  * @see fr.dawan.cc_java_mongo.model.Patient
  * @see fr.dawan.cc_java_mongo.repository.PatientRepository
@@ -58,7 +57,6 @@ public class PatientService {
      * <li>MEDECIN : retourne tous les patients</li>
      * <li>ADMIN : retourne tous les patients</li>
      * </ul>
-     * </p>
      *
      * @param pageable paramètres de pagination
      * @return page de patients filtrée selon les droits de l'utilisateur
@@ -98,7 +96,6 @@ public class PatientService {
      * <li>MEDECIN : recherche dans tous les patients</li>
      * <li>ADMIN : recherche dans tous les patients</li>
      * </ul>
-     * </p>
      *
      * @param nom nom ou partie du nom recherché
      * @param pageable paramètres de pagination
@@ -147,7 +144,6 @@ public class PatientService {
      * <li>MEDECIN : peut accéder à tous les patients</li>
      * <li>ADMIN : peut accéder à tous les patients</li>
      * </ul>
-     * </p>
      *
      * @param numeroSecuriteSociale identifiant du patient
      * @return patient trouvé
