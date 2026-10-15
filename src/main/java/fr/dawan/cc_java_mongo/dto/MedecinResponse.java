@@ -1,6 +1,8 @@
 
 package fr.dawan.cc_java_mongo.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * DTO pour les données de réponse d'un médecin.
  * <p>
@@ -8,9 +10,12 @@ package fr.dawan.cc_java_mongo.dto;
  * sur un médecin (création, lecture, modification).
  * </p>
  */
+@Schema(name = "MedecinResponse", description = "Informations du médecin exposées par l'API.")
 public class MedecinResponse {
 
+    @Schema(description = "Matricule unique du médecin.", example = "MED-1042")
     private String matricule;
+    @Schema(description = "Nom du médecin.", example = "Dr Dupont")
     private String nom;
 
     public MedecinResponse() {

@@ -12,6 +12,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Contrôleur REST pour la gestion des médicaments.
@@ -35,6 +43,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/medicaments")
+@Tag(name = "Médicaments", description = "Consultation du catalogue et administration des médicaments.")
+@SecurityRequirement(name = "bearerAuth")
 public class MedicamentController {
 
     private final MedicamentService medicamentService;
@@ -52,6 +62,8 @@ public class MedicamentController {
      * Récupère la liste des médicaments.
      */
     @GetMapping
+    @Operation(summary = "Lister les médicaments", description = "Retourne la liste complète du catalogue. La route est accessible à tout utilisateur authentifié.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Catalogue des médicaments.", content = @Content(schema = @Schema(implementation = MedicamentResponse.class))), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide.")})
     public List<MedicamentResponse> getMedicaments() {
         return medicamentService.getAllMedicaments()
                 .stream()
@@ -63,7 +75,9 @@ public class MedicamentController {
      * Récupère un médicament par son code.
      */
     @GetMapping("/{code}")
-    public MedicamentResponse getMedicament(@PathVariable String code) {
+    @Operation(summary = "Consulter un médicament", description = "Retourne le médicament associé au code fourni.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Médicament trouvé.", content = @Content(schema = @Schema(implementation = MedicamentResponse.class))), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "404", description = "Médicament inexistant.")})
+    public MedicamentResponse getMedicament(@Parameter(description = "Code unique du médicament.", example = "MED-001") @PathVariable String code) {
         return toResponse(medicamentService.getMedicamentById(code));
     }
 
@@ -72,6 +86,8 @@ public class MedicamentController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Ajouter un médicament", description = "Ajoute un médicament au catalogue. Réservé aux administrateurs ; le code (50 caractères maximum) et le libellé (150 caractères maximum) sont obligatoires.")
+    @ApiResponses({@ApiResponse(responseCode = "201", description = "Médicament créé.", content = @Content(schema = @Schema(implementation = MedicamentResponse.class))), @ApiResponse(responseCode = "400", description = "Données invalides ou code déjà utilisé."), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "403", description = "Réservé à un administrateur.")})
     public MedicamentResponse createMedicament(
             @Valid @RequestBody MedicamentRequest request) {
 
@@ -86,8 +102,10 @@ public class MedicamentController {
      * Modifie un médicament existant.
      */
     @PutMapping("/{code}")
+    @Operation(summary = "Modifier un médicament", description = "Met à jour le libellé du médicament identifié par le code du chemin. Réservé aux administrateurs.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Médicament mis à jour.", content = @Content(schema = @Schema(implementation = MedicamentResponse.class))), @ApiResponse(responseCode = "400", description = "Corps invalide."), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "403", description = "Réservé à un administrateur."), @ApiResponse(responseCode = "404", description = "Médicament inexistant.")})
     public MedicamentResponse updateMedicament(
-            @PathVariable String code,
+            @Parameter(description = "Code du médicament à modifier.", example = "MED-001") @PathVariable String code,
             @Valid @RequestBody MedicamentRequest request) {
 
         Medicament medicament = new Medicament(
@@ -103,7 +121,9 @@ public class MedicamentController {
      */
     @DeleteMapping("/{code}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMedicament(@PathVariable String code) {
+    @Operation(summary = "Supprimer un médicament", description = "Supprime du catalogue le médicament indiqué. Réservé aux administrateurs.")
+    @ApiResponses({@ApiResponse(responseCode = "204", description = "Médicament supprimé."), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "403", description = "Réservé à un administrateur."), @ApiResponse(responseCode = "404", description = "Médicament inexistant.")})
+    public void deleteMedicament(@Parameter(description = "Code du médicament.", example = "MED-001") @PathVariable String code) {
         medicamentService.deleteMedicament(code);
     }
 

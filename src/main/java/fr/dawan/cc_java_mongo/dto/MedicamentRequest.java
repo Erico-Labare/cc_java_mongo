@@ -3,6 +3,7 @@ package fr.dawan.cc_java_mongo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * DTO pour les données de création ou modification d'un médicament.
@@ -11,14 +12,17 @@ import jakarta.validation.constraints.Size;
  * un médicament. Les champs sont validés par les annotations Jakarta Validation.
  * </p>
  */
+@Schema(name = "MedicamentRequest", description = "Données nécessaires à la création ou à la modification d'un médicament.")
 public class MedicamentRequest {
 
     @NotBlank(message = "Le code du médicament est obligatoire.")
     @Size(max = 50, message = "Le code ne doit pas dépasser 50 caractères.")
+    @Schema(description = "Code unique, limité à 50 caractères.", example = "MED-001", requiredMode = Schema.RequiredMode.REQUIRED)
     private String code;
 
     @NotBlank(message = "Le libellé est obligatoire.")
     @Size(max = 150, message = "Le libellé ne doit pas dépasser 150 caractères.")
+    @Schema(description = "Libellé du médicament, limité à 150 caractères.", example = "Paracétamol 500 mg", requiredMode = Schema.RequiredMode.REQUIRED)
     private String libelle;
 
     public MedicamentRequest() {

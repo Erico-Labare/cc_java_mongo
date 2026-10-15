@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Contrôleur REST pour l'authentification des utilisateurs.
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentification", description = "Connexion et émission des jetons d'accès JWT.")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -60,7 +67,13 @@ public class AuthController {
      * @return la réponse contenant le jeton JWT, son type et sa durée de validité
      */
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+    @Operation(summary = "Se connecter", description = "Authentifie les identifiants fournis. Utilisez le jeton retourné dans l'en-tête Authorization: Bearer pour appeler les routes protégées.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Connexion réussie.", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Corps absent, mal formé ou identifiants manquants."),
+            @ApiResponse(responseCode = "401", description = "Nom d'utilisateur ou mot de passe invalide.")
+    })
+    public LoginResponse login(@Valid @org.springframework.web.bind.annotation.RequestBody LoginRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

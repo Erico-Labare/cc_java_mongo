@@ -13,6 +13,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Contrôleur REST pour la gestion des documents associés aux consultations.
@@ -36,6 +44,8 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/api/consultations")
+@Tag(name = "Documents", description = "Dépôt et téléchargement des documents associés aux consultations.")
+@SecurityRequirement(name = "bearerAuth")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -56,9 +66,11 @@ public class DocumentController {
             value = "/{numero}/document",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @Operation(summary = "Déposer un document", description = "Enregistre un fichier multipart dans MongoDB GridFS et l'associe à une consultation. Le champ de formulaire est file. Un document existant est remplacé. Les patients ne peuvent pas déposer ; un médecin doit être celui de la consultation ; un administrateur peut déposer.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Document enregistré ; le corps texte contient son identifiant."), @ApiResponse(responseCode = "400", description = "Fichier vide, nom absent ou requête multipart invalide."), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "403", description = "Dépôt non autorisé pour ce rôle ou cette consultation."), @ApiResponse(responseCode = "404", description = "Consultation inexistante."), @ApiResponse(responseCode = "500", description = "Erreur lors du stockage du document.")})
     public String uploadDocument(
-            @PathVariable String numero,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @Parameter(description = "Numéro de la consultation cible.", example = "CONS-2026-001") @PathVariable String numero,
+            @Parameter(description = "Fichier à déposer. Aucun format ni plafond de taille n'est imposé par le contrôleur.") @RequestParam("file") MultipartFile file) throws IOException {
 
         Consultation consultation =
                 documentService.uploadDocument(numero, file);
@@ -71,8 +83,10 @@ public class DocumentController {
      * Télécharge le document d'une consultation.
      */
     @GetMapping("/{numero}/document")
+    @Operation(summary = "Télécharger le document", description = "Renvoie le fichier associé avec son type de contenu enregistré, ou application/octet-stream si celui-ci est absent ou invalide. Patients : uniquement leurs consultations ; médecins : uniquement leurs consultations ; administrateurs : tous les documents.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Flux du document téléchargé.", content = @Content(schema = @Schema(type = "string", format = "binary"))), @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide."), @ApiResponse(responseCode = "403", description = "Accès au document non autorisé."), @ApiResponse(responseCode = "404", description = "Consultation ou document absent.")})
     public ResponseEntity<InputStreamResource> downloadDocument(
-            @PathVariable String numero) throws IOException {
+            @Parameter(description = "Numéro de la consultation.", example = "CONS-2026-001") @PathVariable String numero) throws IOException {
 
         GridFsResource resource =
                 documentService.downloadDocument(numero);
